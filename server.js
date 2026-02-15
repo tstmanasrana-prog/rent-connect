@@ -4,13 +4,15 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// 1. CLOUDINARY CONFIG (Set these in Render/ .env)
+// 1. CLOUDINARY CONFIG
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_KEY,
@@ -27,55 +29,79 @@ const upload = multer({ storage: storage });
 const UserSchema = new mongoose.Schema({
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
-    coins: { type: Number, default: 3 }, // Every new user gets 3 coins
-    unlockedListings: [String] // IDs of properties they've paid for
+    coins: { type: Number, default: 0 }, 
+    unlockedListings: [String]
 });
 
 const PropertySchema = new mongoose.Schema({
     title: String, rent: Number, phone: String, pincode: String,
     locality: String, district: String, state: String,
-    category: String, type: String,
-    images: [String], // Array of 12 Cloudinary URLs
-    status: { type: String, default: 'pending' }, // pending, verified
+    ownerEmail: String,
+    images: [String],
+    status: { type: String, default: 'pending' },
     vacantDate: String,
-    ownerId: String,
     createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
 
-// 3. ROUTES
-// Multi-Image Upload (Max 12)
+// 3. AUTH ROUTES
+app.post('/api/signup', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ email, password: hashedPassword, coins: 0 });
+        await newUser.save();
+        const token = jwt.sign({ id: newUser._id }, 'SOULSHIFT_SECRET');
+        res.json({ token, coins: 0, email: newUser.email });
+    } catch (error) {
+        res.status(400).json({ error: "User already exists" });
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.status(400).json({ error: "Invalid credentials" });
+    }
+    const token = jwt.sign({ id: user._id }, 'SOULSHIFT_SECRET');
+    res.json({ token, coins: user.coins, email: user.email });
+});
+
+// 4. PROPERTY ROUTES
 app.post('/api/properties', upload.array('images', 12), async (req, res) => {
     try {
-        const imageUrls = req.files.map(file => file.path); // Cloudinary URLs
-        const newProp = new Property({
-            ...req.body,
-            images: imageUrls,
-            status: 'pending' // Admin must verify
-        });
+        const imageUrls = req.files.map(file => file.path);
+        const newProp = new Property({ ...req.body, images: imageUrls });
         await newProp.save();
-        res.json({ message: "Property submitted for verification!" });
+        res.json({ message: "Submitted for verification" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Get Only Verified Properties for Users
 app.get('/api/properties', async (req, res) => {
     const props = await Property.find({ status: 'verified' }).sort({ createdAt: -1 });
     res.json(props);
 });
 
-// Admin Route to Verify Listing
-app.patch('/api/admin/verify/:id', async (req, res) => {
-    const { vacantDate } = req.body;
-    await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate });
-    res.json({ message: "Property Verified & Live!" });
+// 5. ADMIN ROUTES
+app.get('/api/admin/pending', async (req, res) => {
+    const pending = await Property.find({ status: 'pending' });
+    res.json(pending);
 });
 
-mongoose.connect(process.env.MONGODB_URI).then(() => console.log('✅ Marketplace DB Connected'));
+app.patch('/api/admin/verify/:id', async (req, res) => {
+    const { vacantDate } = req.body;
+    const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate });
+    
+    // REWARD LOGIC: Give owner 3 coins
+    await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } });
+    
+    res.json({ message: "Verified and 3 Coins Awarded" });
+});
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+mongoose.connect(process.env.MONGODB_URI).then(() => console.log('✅ DB Connected'));
+app.listen(process.env.PORT || 5000);
