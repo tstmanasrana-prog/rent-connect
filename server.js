@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// 1. CLOUDINARY CONFIG (Set these in Render Settings)
+// 1. CLOUDINARY CONFIGURATION
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_KEY,
@@ -20,7 +20,7 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: { folder: 'rent_connect_properties', allowed_formats: ['jpg', 'png', 'jpeg'] }
+    params: { folder: 'soulshift_rentals', allowed_formats: ['jpg', 'png', 'jpeg'] }
 });
 const upload = multer({ storage: storage });
 
@@ -29,14 +29,13 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     phone: { type: String, required: true },
-    coins: { type: Number, default: 0 }, 
+    coins: { type: Number, default: 0 },
     unlockedListings: [String]
 });
 
 const PropertySchema = new mongoose.Schema({
     title: String, rent: Number, phone: String, pincode: String,
-    locality: String, district: String, state: String,
-    ownerEmail: String,
+    locality: String, ownerEmail: String,
     images: [String],
     status: { type: String, default: 'pending' },
     vacantDate: String,
@@ -46,28 +45,30 @@ const PropertySchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
 
-// 3. AUTH ROUTES
+// 3. AUTHENTICATION ROUTES
 app.post('/api/signup', async (req, res) => {
     try {
         const { email, password, phone } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ email, password: hashedPassword, phone, coins: 0 });
         await newUser.save();
-        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET || 'SOULSHIFT_SECRET');
+        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET || 'SECRET');
         res.json({ token, coins: 0, email: newUser.email });
     } catch (error) {
-        res.status(400).json({ error: "User already exists or missing fields" });
+        res.status(400).json({ error: "User already exists or missing data" });
     }
 });
 
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(400).json({ error: "Invalid credentials" });
-    }
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'SOULSHIFT_SECRET');
-    res.json({ token, coins: user.coins, email: user.email });
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(400).json({ error: "Invalid email or password" });
+        }
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'SECRET');
+        res.json({ token, coins: user.coins, email: user.email });
+    } catch (err) { res.status(500).json({ error: "Server error" }); }
 });
 
 // 4. PROPERTY ROUTES
@@ -76,10 +77,8 @@ app.post('/api/properties', upload.array('images', 12), async (req, res) => {
         const imageUrls = req.files.map(file => file.path);
         const newProp = new Property({ ...req.body, images: imageUrls });
         await newProp.save();
-        res.json({ message: "Submitted for verification" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+        res.json({ message: "Success! Awaiting verification." });
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 app.get('/api/properties', async (req, res) => {
@@ -96,14 +95,15 @@ app.get('/api/admin/pending', async (req, res) => {
 app.patch('/api/admin/verify/:id', async (req, res) => {
     const { vacantDate } = req.body;
     const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate });
+    // REWARD OWNER WITH 3 COINS
     await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } });
-    res.json({ message: "Verified and 3 Coins Awarded" });
+    res.json({ message: "Property Verified! 3 Coins awarded." });
 });
 
-// 6. PORT FIX FOR RENDER
+// 6. SERVER START (FIXED FOR RENDER)
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Soul Shift Media Server Running on Port ${PORT}`);
+    console.log(`🚀 Soul Shift Media live on ${PORT}`);
 });
 
-mongoose.connect(process.env.MONGODB_URI).then(() => console.log('✅ DB Connected'));
+mongoose.connect(process.env.MONGODB_URI).then(() => console.log('✅ MongoDB Connected'));
