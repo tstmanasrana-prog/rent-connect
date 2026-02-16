@@ -25,7 +25,7 @@
             </div>
             <div class="flex items-center gap-4">
                 <div id="coinDisplay" class="hidden flex items-center bg-amber-50 border border-amber-200 px-4 py-2 rounded-full gap-2">
-                    <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700">0</span>
+                    <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700 text-sm">0</span>
                     <button class="bg-amber-500 text-white text-[10px] px-2 py-1 rounded ml-1 uppercase font-black">Add</button>
                 </div>
                 <button onclick="toggleModal('postModal')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm">Post Property</button>
@@ -45,9 +45,8 @@
     </section>
 
     <main class="container mx-auto px-6 py-12">
-        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Direct-Owner Listings</h3>
+        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
         <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-
         <section id="adminSection" class="admin-only mt-20 border-t-2 border-indigo-100 pt-10">
             <h2 class="text-xl font-bold mb-4 text-indigo-600">Admin: Pending Verification</h2>
             <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -60,6 +59,10 @@
             <h3 id="authTitle" class="text-2xl font-black mb-1">Join RentConnect</h3>
             <p class="text-slate-500 text-sm mb-6">Verified listings, zero brokerage.</p>
             <div class="space-y-4">
+                <div id="nameFields" class="grid grid-cols-2 gap-4">
+                    <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
+                    <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-4 rounded-xl outline-none">
+                </div>
                 <input type="email" id="authEmail" placeholder="Email Address" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="text" id="authPhone" placeholder="Mobile Number" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
@@ -73,13 +76,13 @@
         <div class="bg-white p-8 rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-black">List Your Property</h3><button onclick="toggleModal('postModal')" class="text-2xl">&times;</button></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" id="title" placeholder="Title (e.g. 2BHK Near Market)" class="md:col-span-2 bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="text" id="title" placeholder="Title" class="md:col-span-2 bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="pincode" onkeyup="autoFill(this.value)" placeholder="Pincode" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="text" id="locality" placeholder="Locality" class="bg-slate-100 p-4 rounded-xl outline-none" readonly>
                 <input type="text" id="phone" placeholder="WhatsApp Number" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="rent" placeholder="Monthly Rent (₹)" class="bg-slate-50 p-4 rounded-xl outline-none">
-                <div class="md:col-span-2"><label class="text-xs font-bold text-slate-400 ml-2">Upload up to 12 Photos</label><input type="file" id="multiImages" multiple class="w-full mt-2 text-sm text-slate-500"></div>
-                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold shadow-lg">Submit & Get 3 Coins</button>
+                <div class="md:col-span-2"><label class="text-xs font-bold text-slate-400">Upload Photos (Max 12)</label><input type="file" id="multiImages" multiple class="w-full mt-2 text-sm text-slate-500"></div>
+                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold shadow-lg">Submit & Earn 3 Coins</button>
             </div>
         </div>
     </div>
@@ -91,6 +94,7 @@
             isSignUp = !isSignUp;
             document.getElementById('authTitle').innerText = isSignUp ? "Join RentConnect" : "Welcome Back";
             document.getElementById('authBtn').innerText = isSignUp ? "Create Account" : "Sign In";
+            document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none";
             document.getElementById('authPhone').style.display = isSignUp ? "block" : "none";
         }
 
@@ -103,15 +107,20 @@
         }
 
         async function handleAuth() {
+            const firstName = document.getElementById('authFirstName').value;
+            const lastName = document.getElementById('authLastName').value;
             const email = document.getElementById('authEmail').value;
             const password = document.getElementById('authPassword').value;
             const phone = document.getElementById('authPhone').value;
+            
+            const body = isSignUp ? { firstName, lastName, email, password, phone } : { email, password };
             const res = await fetch(isSignUp ? '/api/signup' : '/api/login', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, phone })
+                body: JSON.stringify(body)
             });
             const data = await res.json();
             if(res.ok) {
+                localStorage.setItem('userName', data.firstName);
                 localStorage.setItem('userEmail', data.email);
                 localStorage.setItem('userCoins', data.coins);
                 location.reload();
@@ -129,10 +138,9 @@
             formData.append('phone', document.getElementById('phone').value);
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
-            
             const btn = event.target; btn.innerText = "Processing..."; btn.disabled = true;
-            const res = await fetch('/api/properties', { method: 'POST', body: formData });
-            if(res.ok) { alert("Submitted! We will call you to verify."); location.reload(); }
+            await fetch('/api/properties', { method: 'POST', body: formData });
+            alert("Sent for verification!"); location.reload();
         }
 
         async function loadData() {
@@ -141,8 +149,8 @@
             const list = document.getElementById('property-list');
             props.forEach(p => {
                 list.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 group">
-                        <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:scale-105 transition">
+                    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4">
+                        <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4">
                         <h4 class="font-bold">${p.title}</h4>
                         <p class="text-indigo-600 font-bold">₹${p.rent}</p>
                         <p class="text-slate-400 text-xs mb-4">${p.locality}</p>
@@ -150,8 +158,6 @@
                     </div>
                 `);
             });
-            
-            // If admin mode is triggered via console
             if(document.body.classList.contains('admin-mode')) {
                 const adminRes = await fetch('/api/admin/pending');
                 const pending = await adminRes.json();
@@ -159,9 +165,8 @@
                 pending.forEach(p => {
                     pList.insertAdjacentHTML('beforeend', `
                         <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                            <p class="font-bold">${p.title}</p>
-                            <p class="text-xs text-slate-500">Owner: ${p.phone}</p>
-                            <button onclick="verifyProp('${p._id}')" class="mt-2 bg-indigo-600 text-white px-3 py-1 rounded text-xs">Verify</button>
+                            <p class="font-bold text-sm">${p.title}</p>
+                            <button onclick="verifyProp('${p._id}')" class="mt-2 bg-indigo-600 text-white px-3 py-1 rounded text-[10px] font-bold">Verify & Reward 3 Coins</button>
                         </div>
                     `);
                 });
@@ -170,6 +175,7 @@
 
         async function verifyProp(id) {
             const date = prompt("Vacant Date?");
+            if(!date) return;
             await fetch(`/api/admin/verify/${id}`, {
                 method: 'PATCH', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ vacantDate: date })
@@ -178,11 +184,12 @@
         }
 
         window.onload = () => {
+            const name = localStorage.getItem('userName');
             const coins = localStorage.getItem('userCoins');
-            if(coins !== null) {
+            if(name) {
                 document.getElementById('coinDisplay').classList.remove('hidden');
                 document.getElementById('userCoins').innerText = coins;
-                document.getElementById('loginBtn').innerText = "Profile";
+                document.getElementById('loginBtn').innerText = name;
             }
             loadData();
         };

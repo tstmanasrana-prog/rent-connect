@@ -26,6 +26,8 @@ const upload = multer({ storage: storage });
 
 // 2. DATABASE SCHEMAS
 const UserSchema = new mongoose.Schema({
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     phone: { type: String, required: true },
@@ -48,12 +50,12 @@ const Property = mongoose.model('Property', PropertySchema);
 // 3. AUTHENTICATION ROUTES
 app.post('/api/signup', async (req, res) => {
     try {
-        const { email, password, phone } = req.body;
+        const { firstName, lastName, email, password, phone } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ email, password: hashedPassword, phone, coins: 0 });
+        const newUser = new User({ firstName, lastName, email, password: hashedPassword, phone, coins: 0 });
         await newUser.save();
         const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET || 'SECRET');
-        res.json({ token, coins: 0, email: newUser.email });
+        res.json({ token, coins: 0, email: newUser.email, firstName: newUser.firstName });
     } catch (error) {
         res.status(400).json({ error: "User already exists or missing data" });
     }
@@ -67,7 +69,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ error: "Invalid email or password" });
         }
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'SECRET');
-        res.json({ token, coins: user.coins, email: user.email });
+        res.json({ token, coins: user.coins, email: user.email, firstName: user.firstName });
     } catch (err) { res.status(500).json({ error: "Server error" }); }
 });
 
@@ -95,12 +97,11 @@ app.get('/api/admin/pending', async (req, res) => {
 app.patch('/api/admin/verify/:id', async (req, res) => {
     const { vacantDate } = req.body;
     const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate });
-    // REWARD OWNER WITH 3 COINS
     await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } });
     res.json({ message: "Property Verified! 3 Coins awarded." });
 });
 
-// 6. SERVER START (FIXED FOR RENDER)
+// 6. SERVER START
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Soul Shift Media live on ${PORT}`);
