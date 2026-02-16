@@ -6,13 +6,12 @@ const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// 1. CLOUDINARY CONFIG
+// 1. CLOUDINARY CONFIG (Set these in Render Settings)
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_KEY,
@@ -29,6 +28,7 @@ const upload = multer({ storage: storage });
 const UserSchema = new mongoose.Schema({
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
+    phone: { type: String, required: true },
     coins: { type: Number, default: 0 }, 
     unlockedListings: [String]
 });
@@ -49,14 +49,14 @@ const Property = mongoose.model('Property', PropertySchema);
 // 3. AUTH ROUTES
 app.post('/api/signup', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, phone } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ email, password: hashedPassword, coins: 0 });
+        const newUser = new User({ email, password: hashedPassword, phone, coins: 0 });
         await newUser.save();
-        const token = jwt.sign({ id: newUser._id }, 'SOULSHIFT_SECRET');
+        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET || 'SOULSHIFT_SECRET');
         res.json({ token, coins: 0, email: newUser.email });
     } catch (error) {
-        res.status(400).json({ error: "User already exists" });
+        res.status(400).json({ error: "User already exists or missing fields" });
     }
 });
 
@@ -66,7 +66,7 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(400).json({ error: "Invalid credentials" });
     }
-    const token = jwt.sign({ id: user._id }, 'SOULSHIFT_SECRET');
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'SOULSHIFT_SECRET');
     res.json({ token, coins: user.coins, email: user.email });
 });
 
@@ -96,12 +96,14 @@ app.get('/api/admin/pending', async (req, res) => {
 app.patch('/api/admin/verify/:id', async (req, res) => {
     const { vacantDate } = req.body;
     const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate });
-    
-    // REWARD LOGIC: Give owner 3 coins
     await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } });
-    
     res.json({ message: "Verified and 3 Coins Awarded" });
 });
 
+// 6. PORT FIX FOR RENDER
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Soul Shift Media Server Running on Port ${PORT}`);
+});
+
 mongoose.connect(process.env.MONGODB_URI).then(() => console.log('✅ DB Connected'));
-app.listen(process.env.PORT || 5000);
