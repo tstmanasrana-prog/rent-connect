@@ -36,11 +36,15 @@ const UserSchema = new mongoose.Schema({
 });
 
 const PropertySchema = new mongoose.Schema({
-    title: String, rent: Number, phone: String, pincode: String,
-    locality: String, ownerEmail: String,
+    title: String, 
+    rent: Number, 
+    phone: String, 
+    pincode: String,
+    locality: String, 
+    ownerEmail: String,
     images: [String],
     status: { type: String, default: 'pending' },
-    vacantDate: String,
+    vacantDate: { type: String, default: 'Available Now' }, // Added default
     createdAt: { type: Date, default: Date.now }
 });
 

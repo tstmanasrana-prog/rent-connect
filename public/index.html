@@ -178,16 +178,25 @@
             const props = await res.json();
             const list = document.getElementById('property-list');
             props.forEach(p => {
-                list.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4">
-                        <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4">
-                        <h4 class="font-bold">${p.title}</h4>
-                        <p class="text-indigo-600 font-bold">₹${p.rent}</p>
-                        <p class="text-slate-400 text-xs mb-4">${p.locality}</p>
-                        <button class="w-full bg-slate-900 text-white p-3 rounded-xl font-bold">Unlock Contact (1 Coin)</button>
-                    </div>
-                `);
-            });
+    list.insertAdjacentHTML('beforeend', `
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden p-4 group">
+            <div class="relative">
+                <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:scale-105 transition">
+                <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">
+                    Vacant on: ${p.vacantDate || 'Available Now'}
+                </div>
+            </div>
+            <h4 class="font-bold text-lg text-slate-800">${p.title}</h4>
+            <div class="flex justify-between items-center mt-1 mb-4">
+                <p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}<span class="text-[10px] text-slate-400 font-normal">/mo</span></p>
+                <p class="text-slate-400 text-xs"><i class="fas fa-map-marker-alt mr-1"></i>${p.locality}</p>
+            </div>
+            <button class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold hover:bg-indigo-600 transition shadow-lg">
+                <i class="fas fa-phone-alt mr-2"></i> Unlock Contact (1 Coin)
+            </button>
+        </div>
+    `);
+});
             if(document.body.classList.contains('admin-mode')) {
                 const adminRes = await fetch('/api/admin/pending');
                 const pending = await adminRes.json();
@@ -249,20 +258,37 @@
         
         // Ensure your verifyProp function is ready to handle the button click
         async function verifyProp(id) {
-            const date = prompt("When is this property vacant? (e.g. Tomorrow, 1st March)");
-            if(!date) return; // Cancel if no date given
+    const date = prompt("When is this property vacant? (e.g., 8th March 2026)");
+    
+    // If you cancel the prompt, stop the function
+    if(date === null) return; 
 
-            const res = await fetch(`/api/admin/verify/${id}`, {
-                method: 'PATCH',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ vacantDate: date })
-            });
+    // Send the verification and the date to the server
+    const res = await fetch(`/api/admin/verify/${id}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ vacantDate: date })
+    });
 
-            if(res.ok) {
-                alert("Property Verified! 3 Coins awarded to owner.");
-                location.reload(); // Refresh to move it to the public list
-            }
-        }
+    if(res.ok) {
+        alert("Verification Success! Owner awarded 3 coins.");
+        
+        // --- SYNC COINS LOGIC ---
+        // 1. Get current coins from browser memory
+        let currentCoins = parseInt(localStorage.getItem('userCoins') || 0);
+        
+        // 2. Add 3 to it
+        let newTotal = currentCoins + 3;
+        
+        // 3. Save the new total back to browser memory
+        localStorage.setItem('userCoins', newTotal);
+        
+        // 4. Refresh page so the header shows the new number
+        location.reload(); 
+    } else {
+        alert("Failed to verify property. Check console for errors.");
+    }
+}
     </script>
 </body>
 </html>
