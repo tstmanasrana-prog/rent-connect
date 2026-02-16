@@ -107,26 +107,56 @@
         }
 
         async function handleAuth() {
-            const firstName = document.getElementById('authFirstName').value;
-            const lastName = document.getElementById('authLastName').value;
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const phone = document.getElementById('authPhone').value;
-            
-            const body = isSignUp ? { firstName, lastName, email, password, phone } : { email, password };
-            const res = await fetch(isSignUp ? '/api/signup' : '/api/login', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const data = await res.json();
-            if(res.ok) {
-                localStorage.setItem('userName', data.firstName);
-                localStorage.setItem('userEmail', data.email);
-                localStorage.setItem('userCoins', data.coins);
-                location.reload();
-            } else { alert(data.error); }
-        }
+    const firstName = document.getElementById('authFirstName').value;
+    const lastName = document.getElementById('authLastName').value;
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    const phone = document.getElementById('authPhone').value;
+    const btn = document.getElementById('authBtn');
 
+    // 1. Validation Check
+    if(!email || !password) return alert("Email and Password are required");
+    if(isSignUp && (!firstName || !lastName || !phone)) return alert("Please fill all fields for Sign Up");
+
+    // 2. UI Feedback
+    btn.innerText = "Processing...";
+    btn.disabled = true;
+
+    try {
+        const body = isSignUp ? { firstName, lastName, email, password, phone } : { email, password };
+        console.log("Sending Auth Data:", body);
+
+        const res = await fetch(isSignUp ? '/api/signup' : '/api/login', {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+        console.log("Server Response:", data);
+
+        if(res.ok) {
+            // SUCCESS! 
+            localStorage.setItem('userName', data.firstName || 'User');
+            localStorage.setItem('userEmail', data.email);
+            localStorage.setItem('userCoins', data.coins || 0);
+            
+            alert(isSignUp ? "Account Created! Welcome to RentConnect." : "Login Successful!");
+            
+            // REDIRECT / REFRESH
+            window.location.href = "/"; // This forces it back to the home page with the profile visible
+        } else {
+            alert("Error: " + (data.error || "Could not authenticate"));
+            btn.innerText = isSignUp ? "Create Account" : "Sign In";
+            btn.disabled = false;
+        }
+    } catch (err) {
+        console.error("Connection Error:", err);
+        alert("Server is not responding. Please check if Render is 'Live'.");
+        btn.innerText = isSignUp ? "Create Account" : "Sign In";
+        btn.disabled = false;
+    }
+}
         async function submitProperty() {
             const email = localStorage.getItem('userEmail');
             if(!email) return alert("Please Sign In!");
