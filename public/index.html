@@ -258,35 +258,55 @@
         
         // Ensure your verifyProp function is ready to handle the button click
         async function verifyProp(id) {
-    const date = prompt("When is this property vacant? (e.g., 8th March 2026)");
+    // Create a hidden date input to trigger the native calendar
+    const dateInput = document.createElement('input');
+    dateInput.type = 'date';
     
-    // If you cancel the prompt, stop the function
-    if(date === null) return; 
+    dateInput.onchange = async () => {
+        const selectedDate = dateInput.value; // Format: YYYY-MM-DD
+        if(!selectedDate) return;
 
-    // Send the verification and the date to the server
-    const res = await fetch(`/api/admin/verify/${id}`, {
-        method: 'PATCH',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ vacantDate: date })
-    });
+        const res = await fetch(`/api/admin/verify/${id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ vacantDate: selectedDate })
+        });
 
-    if(res.ok) {
-        alert("Verification Success! Owner awarded 3 coins.");
+        if(res.ok) {
+            alert("Success! Property is live and owner rewarded 3 coins.");
+            // Update local coins for immediate feedback
+            let coins = parseInt(localStorage.getItem('userCoins') || 0);
+            localStorage.setItem('userCoins', coins + 3);
+            location.reload();
+        }
+    };
+    
+    dateInput.click(); // This opens the calendar automatically
+}
+async function unlockContact(propId, phoneNumber) {
+    let coins = parseInt(localStorage.getItem('userCoins') || 0);
+
+    if (coins < 1) {
+        alert("You need at least 1 Coin to unlock contact details. Post a property to earn 3 coins!");
+        return;
+    }
+
+    if (confirm("Spend 1 Coin to unlock this contact?")) {
+        // In a full production app, you'd verify this on the server.
+        // For now, we handle the 'Visual' unlock for your V1.
         
-        // --- SYNC COINS LOGIC ---
-        // 1. Get current coins from browser memory
-        let currentCoins = parseInt(localStorage.getItem('userCoins') || 0);
-        
-        // 2. Add 3 to it
-        let newTotal = currentCoins + 3;
-        
-        // 3. Save the new total back to browser memory
+        let newTotal = coins - 1;
         localStorage.setItem('userCoins', newTotal);
+        document.getElementById('userCoins').innerText = newTotal;
+
+        // Change the button to show the actual number
+        const btn = event.target.closest('button');
+        btn.innerHTML = `<i class="fab fa-whatsapp mr-2"></i> ${phoneNumber}`;
+        btn.classList.remove('bg-slate-900');
+        btn.classList.add('bg-green-600');
+        btn.onclick = () => window.open(`https://wa.me/${phoneNumber}`, '_blank');
         
-        // 4. Refresh page so the header shows the new number
-        location.reload(); 
-    } else {
-        alert("Failed to verify property. Check console for errors.");
+        alert("1 Coin spent. Contact unlocked!");
     }
 }
     </script>
