@@ -105,23 +105,44 @@
         }
 
         async function handleAuth() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const phone = document.getElementById('authPhone').value;
-            
-            const body = isSignUp ? { email, password, phone } : { email, password };
+    const email = document.getElementById('authEmail').value;
+    const password = document.getElementById('authPassword').value;
+    const phone = document.getElementById('authPhone').value;
+    
+    // Basic validation
+    if(!email || !password || (isSignUp && !phone)) {
+        return alert("Please fill in all details");
+    }
 
-            const res = await fetch(isSignUp ? '/api/signup' : '/api/login', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const data = await res.json();
-            if(res.ok) {
-                localStorage.setItem('userEmail', data.email);
-                localStorage.setItem('userCoins', data.coins);
-                location.reload();
-            } else { alert(data.error); }
+    try {
+        const body = isSignUp ? { email, password, phone } : { email, password };
+
+        const res = await fetch(isSignUp ? '/api/signup' : '/api/login', {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if(res.ok) {
+            // SUCCESS! Save details to the browser's memory
+            localStorage.setItem('userEmail', data.email);
+            localStorage.setItem('userCoins', data.coins);
+            
+            alert(isSignUp ? "Account Created Successfully!" : "Welcome Back!");
+            
+            // This forces the page to refresh and show the "Profile" / "Coins"
+            window.location.reload(); 
+        } else {
+            // This will show "User already exists" or other errors
+            alert(data.error || "Something went wrong");
         }
+    } catch (err) {
+        console.error("Auth Error:", err);
+        alert("Connection failed. Is the server live?");
+    }
+}
 
         async function submitProperty() {
             const email = localStorage.getItem('userEmail');
