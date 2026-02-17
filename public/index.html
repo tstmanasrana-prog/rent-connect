@@ -13,6 +13,8 @@
         .hero-pattern { background-color: #4338ca; background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%); }
         .admin-only { display: none; }
         .admin-mode .admin-only { display: block; }
+        /* Gallery Styles */
+        #galleryOverlay img { max-height: 80vh; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -50,6 +52,16 @@
             <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </section>
     </main>
+
+    <div id="galleryOverlay" class="fixed inset-0 bg-black/95 hidden z-[300] flex flex-col justify-center items-center p-4">
+        <button onclick="closeGallery()" class="absolute top-6 right-6 text-white text-4xl">&times;</button>
+        <div class="relative w-full max-w-5xl flex items-center justify-center">
+            <button onclick="prevImg()" class="absolute left-0 text-white bg-white/10 p-4 rounded-full hover:bg-white/20 transition"><i class="fas fa-chevron-left"></i></button>
+            <img id="galleryImg" src="" class="rounded-xl shadow-2xl">
+            <button onclick="nextImg()" class="absolute right-0 text-white bg-white/10 p-4 rounded-full hover:bg-white/20 transition"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <p id="galleryCounter" class="text-white/50 mt-6 font-bold"></p>
+    </div>
 
     <div id="authModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[200] p-4 backdrop-blur-md">
         <div class="bg-white p-10 rounded-[2.5rem] w-full max-w-md relative">
@@ -91,6 +103,9 @@
 
     <script>
         let isSignUp = true;
+        let currentPropImages = [];
+        let currentImgIdx = 0;
+
         function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
         function toggleAuthMode() {
             isSignUp = !isSignUp;
@@ -148,16 +163,47 @@
             });
         }
 
+        // GALLERY LOGIC
+        function openGallery(imagesJson) {
+            currentPropImages = JSON.parse(decodeURIComponent(imagesJson));
+            currentImgIdx = 0;
+            updateGalleryUI();
+            document.getElementById('galleryOverlay').classList.remove('hidden');
+        }
+
+        function closeGallery() { document.getElementById('galleryOverlay').classList.add('hidden'); }
+
+        function updateGalleryUI() {
+            document.getElementById('galleryImg').src = currentPropImages[currentImgIdx];
+            document.getElementById('galleryCounter').innerText = `Image ${currentImgIdx + 1} of ${currentPropImages.length}`;
+        }
+
+        function nextImg() {
+            currentImgIdx = (currentImgIdx + 1) % currentPropImages.length;
+            updateGalleryUI();
+        }
+
+        function prevImg() {
+            currentImgIdx = (currentImgIdx - 1 + currentPropImages.length) % currentPropImages.length;
+            updateGalleryUI();
+        }
+
         async function loadData() {
             const res = await fetch('/api/properties');
             const props = await res.json();
             const list = document.getElementById('property-list');
             list.innerHTML = '';
             props.forEach(p => {
+                // Prepare images for gallery
+                const imgsData = encodeURIComponent(JSON.stringify(p.images));
+                
                 list.insertAdjacentHTML('beforeend', `
                     <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4">
-                        <div class="relative">
-                            <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4">
+                        <div class="relative cursor-pointer group" onclick="openGallery('${imgsData}')">
+                            <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition">
+                            <div class="absolute bottom-6 right-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md">
+                                <i class="fas fa-camera mr-1"></i> ${p.images.length} Photos
+                            </div>
                             <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
                         </div>
                         <h4 class="font-bold text-lg">${p.title}</h4>
