@@ -51,7 +51,7 @@
             <a href="upi://pay?pa=YOUR_UPI_ID&pn=SoulShiftMedia&am=99&cu=INR" class="block w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg mb-4 hover:scale-[1.02] transition transform">
                 Pay ₹99 via UPI
             </a>
-            <p class="text-[10px] text-slate-400 font-medium">Payment secured by BHIM UPI. <br> Coins will be credited after manual verification.</p>
+            <p class="text-[10px] text-slate-400 font-medium">After payment, WhatsApp us with screenshot <br> to credit coins manually.</p>
         </div>
     </div>
 
@@ -153,41 +153,40 @@
         }
 
         async function submitProperty() {
+            const title = document.getElementById('title').value;
+            const locality = document.getElementById('locality').value;
+            const ownerEmail = localStorage.getItem('userEmail');
+
             const formData = new FormData();
-            formData.append('ownerEmail', localStorage.getItem('userEmail'));
-            formData.append('title', document.getElementById('title').value);
-            formData.append('locality', document.getElementById('locality').value);
+            formData.append('ownerEmail', ownerEmail);
+            formData.append('title', title);
+            formData.append('locality', locality);
             formData.append('pincode', document.getElementById('pincode').value);
             formData.append('rent', document.getElementById('rent').value);
             formData.append('phone', document.getElementById('phone').value);
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
             
-            // Option B Hook: Notify Admin via Formspree (Get your ID at formspree.io)
-            // fetch("https://formspree.io/f/YOUR_ID", {
-            //     method: "POST",
-            //     body: JSON.stringify({ msg: `New property: ${document.getElementById('title').value}` }),
-            //     headers: { 'Accept': 'application/json' }
-            // });
+            // FORMSPREE LIVE NOTIFICATION
+            fetch("https://formspree.io/f/xojnwzlg", {
+                method: "POST",
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    subject: "New Property Alert | Soul Shift Media",
+                    message: `New property listed: ${title} in ${locality}. Submitted by owner: ${ownerEmail}`
+                })
+            });
 
             await fetch('/api/properties', { method: 'POST', body: formData });
-            alert("Sent for verification!"); location.reload();
+            alert("Sent for verification! You will get an email notification soon."); location.reload();
         }
 
         function filterProperties() {
             const term = document.getElementById('searchInput').value.toLowerCase();
-            document.querySelectorAll('#property-list > div').forEach(card => {
-                card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none";
-            });
+            document.querySelectorAll('#property-list > div').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; });
         }
 
-        function openGallery(imagesJson) {
-            currentPropImages = JSON.parse(decodeURIComponent(imagesJson));
-            currentImgIdx = 0;
-            updateGalleryUI();
-            document.getElementById('galleryOverlay').classList.remove('hidden');
-        }
-
+        function openGallery(imagesJson) { currentPropImages = JSON.parse(decodeURIComponent(imagesJson)); currentImgIdx = 0; updateGalleryUI(); document.getElementById('galleryOverlay').classList.remove('hidden'); }
         function closeGallery() { document.getElementById('galleryOverlay').classList.add('hidden'); }
         function updateGalleryUI() { document.getElementById('galleryImg').src = currentPropImages[currentImgIdx]; document.getElementById('galleryCounter').innerText = `Image ${currentImgIdx + 1} of ${currentPropImages.length}`; }
         function nextImg() { currentImgIdx = (currentImgIdx + 1) % currentPropImages.length; updateGalleryUI(); }
@@ -207,19 +206,19 @@
                 list.insertAdjacentHTML('beforeend', `
                     <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4">
                         <div class="relative cursor-pointer group" onclick="openGallery('${imgsData}')">
-                            <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition">
+                            <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition shadow-inner">
                             <div class="absolute bottom-6 right-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md">
                                 <i class="fas fa-camera mr-1"></i> ${p.images.length} Photos
                             </div>
                             <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
                         </div>
-                        <h4 class="font-bold text-lg">${p.title}</h4>
+                        <h4 class="font-bold text-lg text-slate-800">${p.title}</h4>
                         <div class="flex justify-between items-center mt-1 mb-4">
                             <p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p>
                             <p class="text-slate-400 text-xs">${p.locality}</p>
                         </div>
                         <button onclick="${isUnlocked ? `window.open('https://wa.me/${p.phone}')` : `unlockContact(event, '${p.phone}', '${p._id}')`}" 
-                                class="w-full ${isUnlocked ? 'bg-green-600' : 'bg-slate-900'} text-white p-4 rounded-xl font-bold shadow-lg">
+                                class="w-full ${isUnlocked ? 'bg-green-600' : 'bg-slate-900'} text-white p-4 rounded-xl font-bold shadow-lg hover:scale-[1.01] transition">
                             ${isUnlocked ? `<i class="fab fa-whatsapp"></i> ${p.phone}` : 'Unlock Contact (1 Coin)'}
                         </button>
                     </div>
@@ -233,9 +232,9 @@
                 pList.innerHTML = '';
                 pending.forEach(p => {
                     pList.insertAdjacentHTML('beforeend', `
-                        <div class="bg-indigo-50 p-6 rounded-[1.5rem] border border-indigo-200 mb-4">
-                            <p class="font-bold text-indigo-900">${p.title}</p>
-                            <button onclick="verifyProp('${p._id}')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg mt-4">Verify & Reward 3 Coins</button>
+                        <div class="bg-indigo-50 p-6 rounded-[1.5rem] border border-indigo-200 mb-4 shadow-sm">
+                            <p class="font-bold text-indigo-900">${p.title} (${p.locality})</p>
+                            <button onclick="verifyProp('${p._id}')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg mt-4">Verify listing & Reward 3 Coins</button>
                         </div>
                     `);
                 });
@@ -243,34 +242,29 @@
         }
 
         async function verifyProp(id) {
-            const date = prompt("Vacant Date?"); if(!date) return;
+            const date = prompt("Set Vacant Date (e.g. 15th March):"); if(!date) return;
             const res = await fetch(`/api/admin/verify/${id}`, {
                 method: 'PATCH', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ vacantDate: date })
             });
             const data = await res.json();
-            if(res.ok) {
-                localStorage.setItem('userCoins', data.newBalance);
-                location.reload();
-            }
+            if(res.ok) { localStorage.setItem('userCoins', data.newBalance); location.reload(); }
         }
 
         async function unlockContact(e, phone, propId) {
-            let c = parseInt(localStorage.getItem('userCoins') || 0);
-            const email = localStorage.getItem('userEmail');
-            if(c < 1) return alert("Earn coins by posting a property!");
-            if(confirm("Spend 1 coin?")) {
+            let c = parseInt(localStorage.getItem('userCoins') || 0); const email = localStorage.getItem('userEmail');
+            if(c < 1) return alert("Earn coins by posting a property or click the Coin icon to buy!");
+            if(confirm("Unlock this contact for 1 Coin?")) {
                 const res = await fetch('/api/spend-coin', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email: email, amount: 1, description: "Unlocked contact", propId: propId })
+                    body: JSON.stringify({ email, amount: 1, description: "Contact Unlock", propId })
                 });
                 const data = await res.json();
                 if(res.ok) {
                     localStorage.setItem('userCoins', data.newBalance);
                     localStorage.setItem('unlocked', JSON.stringify(data.unlocked));
                     document.getElementById('userCoins').innerText = data.newBalance;
-                    
                     const btn = e.currentTarget || e.target;
                     btn.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
                     btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
@@ -278,13 +272,7 @@
             }
         }
 
-        function enterAdmin() {
-            if(prompt("Admin Password:") === "soulshift2026") {
-                document.body.classList.add('admin-mode');
-                loadData();
-                document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' });
-            }
-        }
+        function enterAdmin() { if(prompt("Admin Access:") === "soulshift2026") { document.body.classList.add('admin-mode'); loadData(); document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' }); } }
 
         window.onload = () => {
             const name = localStorage.getItem('userName');
