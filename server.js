@@ -25,7 +25,8 @@ const upload = multer({ storage: storage });
 // SCHEMAS
 const UserSchema = new mongoose.Schema({
     firstName: String, lastName: String, email: { type: String, unique: true },
-    password: String, phone: String, coins: { type: Number, default: 0 }
+    password: String, phone: String, coins: { type: Number, default: 0 },
+    unlockedProperties: [String] // NEW: Stores IDs of unlocked houses
 });
 
 const PropertySchema = new mongoose.Schema({
@@ -35,13 +36,9 @@ const PropertySchema = new mongoose.Schema({
     vacantDate: { type: String, default: 'Available Now' }
 });
 
-// NEW: Transaction Schema for Coin Tracking
 const TransactionSchema = new mongoose.Schema({
-    userEmail: String,
-    type: String, // 'earned' or 'spent'
-    amount: Number,
-    description: String,
-    date: { type: Date, default: Date.now }
+    userEmail: String, type: String, amount: Number,
+    description: String, date: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -54,14 +51,14 @@ app.post('/api/signup', async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const newUser = new User({ ...req.body, password: hashedPassword, coins: 0 });
         await newUser.save();
-        res.json({ email: newUser.email, firstName: newUser.firstName, coins: 0 });
+        res.json({ email: newUser.email, firstName: newUser.firstName, coins: 0, unlocked: [] });
     } catch (e) { res.status(400).json({ error: "Already exists" }); }
 });
 
 app.post('/api/login', async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user || !(await bcrypt.compare(req.body.password, user.password))) return res.status(400).json({ error: "Wrong credentials" });
-    res.json({ email: user.email, firstName: user.firstName, coins: user.coins });
+    res.json({ email: user.email, firstName: user.firstName, coins: user.coins, unlocked: user.unlockedProperties });
 });
 
 // PROPERTIES
@@ -77,10 +74,7 @@ app.get('/api/properties', async (req, res) => {
 });
 
 app.get('/api/my-properties/:email', async (req, res) => {
-    const props = await Property.find({ 
-        ownerEmail: req.params.email, 
-        status: { $ne: 'unavailable' } 
-    }).sort({ _id: -1 });
+    const props = await Property.find({ ownerEmail: req.params.email, status: { $ne: 'unavailable' } }).sort({ _id: -1 });
     res.json(props);
 });
 
@@ -91,19 +85,23 @@ app.patch('/api/properties/hide/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Delete failed" }); }
 });
 
-// NEW: TRANSACTION ROUTES
 app.get('/api/transactions/:email', async (req, res) => {
     const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
     res.json(txs);
 });
 
-// NEW: SPEND COIN LOGIC
+// FIXED: SPEND COIN & SAVE UNLOCK
 app.post('/api/spend-coin', async (req, res) => {
-    const { email, amount, description } = req.body;
-    const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount } });
+    const { email, amount, description, propId } = req.body;
+    // $addToSet prevents duplicate IDs in the unlocked list
+    const user = await User.findOneAndUpdate(
+        { email }, 
+        { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } },
+        { new: true }
+    );
     const tx = new Transaction({ userEmail: email, type: 'spent', amount, description });
     await tx.save();
-    res.json({ newBalance: user.coins - amount });
+    res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
 // ADMIN
@@ -114,22 +112,11 @@ app.get('/api/admin/pending', async (req, res) => {
 
 app.patch('/api/admin/verify/:id', async (req, res) => {
     try {
-        const property = await Property.findByIdAndUpdate(req.params.id, { 
-            status: 'verified', 
-            vacantDate: req.body.vacantDate 
-        });
-        await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } });
-        
-        // Record Earned Transaction
-        const tx = new Transaction({ 
-            userEmail: property.ownerEmail, 
-            type: 'earned', 
-            amount: 3, 
-            description: `Verified listing: ${property.title}` 
-        });
+        const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate: req.body.vacantDate });
+        const user = await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } }, { new: true });
+        const tx = new Transaction({ userEmail: property.ownerEmail, type: 'earned', amount: 3, description: `Verified: ${property.title}` });
         await tx.save();
-
-        res.json({ ok: true });
+        res.json({ ok: true, newBalance: user.coins });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
