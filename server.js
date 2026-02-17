@@ -119,7 +119,7 @@ app.patch('/api/admin/verify/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// NEW ADMIN ROUTE: ADD COINS MANUALLY (For UPI Purchases)
+// NEW ADMIN ROUTE: ADD COINS MANUALLY
 app.post('/api/admin/add-coins', async (req, res) => {
     const { email, amount } = req.body;
     try {

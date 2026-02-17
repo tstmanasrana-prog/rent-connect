@@ -47,7 +47,7 @@
             <button onclick="toggleModal('buyCoinsModal')" class="absolute top-6 right-6 text-slate-300 text-2xl">&times;</button>
             <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl shadow-inner"><i class="fas fa-coins"></i></div>
             <h3 class="text-2xl font-black mb-2 text-slate-900">Get More Coins</h3>
-            <p class="text-slate-500 text-sm mb-6 px-4">Unlock 3 owner contacts instantly for just ₹299.</p>
+            <p class="text-slate-500 text-sm mb-6 px-4">Get 3 coins for just ₹299.</p>
             
             <div class="mb-6 flex flex-col items-center">
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=9686995600@ybl%26pn=SoulShiftMedia%26am=299%26cu=INR" 
@@ -55,12 +55,12 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Scan to Pay ₹299</p>
             </div>
 
-            <a href="upi://pay?pa=9686995600@ybl&pn=SoulShiftMedia&am=299&cu=INR" onclick="showVerifyStep()" class="block w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg mb-4 hover:scale-[1.02] transition transform">
+            <a href="upi://pay?pa=9686995600@ybl&pn=SoulShiftMedia&am=299&cu=INR" class="block w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg mb-4 hover:scale-[1.02] transition transform">
                 Pay via App
             </a>
 
-            <div id="verifyStep" class="hidden border-t pt-4 mt-2">
-                <p class="text-xs text-slate-400 mb-3 font-medium text-center">Payment done? Click below to notify us.</p>
+            <div class="border-t pt-4 mt-2">
+                <p class="text-xs text-slate-400 mb-3 font-medium text-center">Payment done?</p>
                 <button onclick="requestCoinCredit()" class="w-full bg-emerald-500 text-white p-3 rounded-xl font-bold text-sm shadow-md hover:bg-emerald-600 transition">I have paid, Add Coins</button>
             </div>
         </div>
@@ -80,9 +80,9 @@
         
         <section id="adminSection" class="admin-only mt-20 border-t-4 border-indigo-600 pt-10">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black">Admin: Pending Verification</h2>
-                <button onclick="manualAddCoins()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 transition">
-                    <i class="fas fa-plus mr-2"></i> Add Coins to User
+                <h2 class="text-2xl font-black">Admin Panel</h2>
+                <button onclick="manualAddCoins()" class="bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 shadow-lg transition">
+                    <i class="fas fa-plus-circle mr-2"></i> Add Coins to User
                 </button>
             </div>
             <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -105,12 +105,12 @@
             <h3 id="authTitle" class="text-3xl font-black mb-6">Join RentConnect</h3>
             <div class="space-y-4">
                 <div id="nameFields" class="grid grid-cols-2 gap-4">
-                    <input type="text" id="authFirstName" autocomplete="given-name" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
-                    <input type="text" id="authLastName" autocomplete="family-name" placeholder="Last Name" class="bg-slate-50 p-4 rounded-xl outline-none">
+                    <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
+                    <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-4 rounded-xl outline-none">
                 </div>
-                <input type="email" id="authEmail" autocomplete="email" placeholder="Email" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <input type="text" id="authPhone" autocomplete="tel" placeholder="Mobile" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <input type="password" id="authPassword" autocomplete="new-password" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="email" id="authEmail" placeholder="Email" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="text" id="authPhone" placeholder="Mobile" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg">Continue</button>
                 <p class="text-center text-sm mt-4"><button onclick="toggleAuthMode()" class="text-indigo-600 font-bold">Switch Login/Signup</button></p>
             </div>
@@ -145,25 +145,36 @@
         function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
         function logout() { localStorage.clear(); location.reload(); }
         function toggleAuthMode() { isSignUp = !isSignUp; document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none"; document.getElementById('authPhone').style.display = isSignUp ? "block" : "none"; }
-        function showVerifyStep() { setTimeout(() => { document.getElementById('verifyStep').classList.remove('hidden'); }, 1500); }
+        
+        // ADMIN: ADD COINS LOGIC
+        async function manualAddCoins() {
+            const email = prompt("Enter User Email address:");
+            const amount = prompt("Enter number of coins to credit (e.g. 3):");
+            if(!email || !amount) return;
+
+            const res = await fetch('/api/admin/add-coins', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email, amount: parseInt(amount) })
+            });
+
+            const data = await res.json();
+            if(res.ok) {
+                alert(`Success! ${amount} coins added to ${email}. New Balance: ${data.newBalance}`);
+            } else {
+                alert("Error: " + data.error);
+            }
+        }
 
         async function requestCoinCredit() {
             const email = localStorage.getItem('userEmail');
             fetch("https://formspree.io/f/xojnwzlg", {
                 method: "POST",
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject: "PAYMENT VERIFICATION REQUEST", message: `User ${email} claims ₹299 paid. Verify UPI and add 3 coins via Admin Panel.` })
+                body: JSON.stringify({ subject: "UPI PAYMENT VERIFICATION REQUEST", message: `User ${email} has claimed payment of ₹299. Please check bank and credit 3 coins via Admin Panel.` })
             });
-            alert("Request sent! Admin will verify payment and add 3 coins to your account shortly.");
+            alert("Request sent! Admin will verify and add coins shortly.");
             toggleModal('buyCoinsModal');
-        }
-
-        async function manualAddCoins() {
-            const email = prompt("Enter User Email:");
-            const amount = prompt("Enter Coins to Add (e.g. 3):");
-            if(!email || !amount) return;
-            const res = await fetch('/api/admin/add-coins', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: parseInt(amount) }) });
-            if(res.ok) { alert("Coins added successfully!"); } else { alert("User not found!"); }
         }
 
         async function autoFill(pin) {
@@ -276,7 +287,7 @@
             let c = parseInt(localStorage.getItem('userCoins') || 0); const email = localStorage.getItem('userEmail');
             if(c < 1) { toggleModal('buyCoinsModal'); return; }
             if(confirm("Unlock contact for 1 Coin?")) {
-                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email, amount: 1, description: "Contact Unlock", propId: propId }) });
+                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email, amount: 1, description: "Contact Unlock", propId }) });
                 const data = await res.json();
                 if(res.ok) {
                     localStorage.setItem('userCoins', data.newBalance);
