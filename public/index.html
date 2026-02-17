@@ -27,7 +27,7 @@
                 <div id="coinDisplay" class="hidden md:flex items-center bg-amber-50 border border-amber-200 px-4 py-2 rounded-full gap-2">
                     <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700 text-sm">0</span>
                 </div>
-                <button onclick="toggleModal('postModal')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">Post Property</button>
+                <button onclick="toggleModal('postModal')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Post Property</button>
                 <button onclick="toggleModal('authModal')" id="loginBtn" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Sign In</button>
             </div>
         </div>
@@ -44,9 +44,7 @@
     </section>
 
     <main class="container mx-auto px-6 py-12">
-        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
         <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-
         <section id="adminSection" class="admin-only mt-20 border-t-4 border-indigo-600 pt-10">
             <h2 class="text-2xl font-black mb-4">Pending Verification</h2>
             <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -59,29 +57,29 @@
             <h3 id="authTitle" class="text-3xl font-black mb-6">Join RentConnect</h3>
             <div class="space-y-4">
                 <div id="nameFields" class="grid grid-cols-2 gap-4">
-                    <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
-                    <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-4 rounded-xl outline-none">
+                    <input type="text" id="authFirstName" autocomplete="given-name" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
+                    <input type="text" id="authLastName" autocomplete="family-name" placeholder="Last Name" class="bg-slate-50 p-4 rounded-xl outline-none">
                 </div>
-                <input type="email" id="authEmail" placeholder="Email Address" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <input type="text" id="authPhone" placeholder="Mobile Number" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="email" id="authEmail" autocomplete="email" placeholder="Email" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="text" id="authPhone" autocomplete="tel" placeholder="Mobile" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="password" id="authPassword" autocomplete="new-password" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg">Continue</button>
-                <p class="text-center text-sm text-slate-400">Want to switch? <button onclick="toggleAuthMode()" class="text-indigo-600 font-bold">Login / Signup</button></p>
+                <p class="text-center text-sm mt-4"><button onclick="toggleAuthMode()" class="text-indigo-600 font-bold">Switch Login/Signup</button></p>
             </div>
         </div>
     </div>
 
     <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[100] p-4 backdrop-blur-md">
-        <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-black">List Property</h3><button onclick="toggleModal('postModal')" class="text-2xl">&times;</button></div>
+        <div class="bg-white p-8 rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-2xl font-black mb-6">List Property</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" id="title" placeholder="Title" class="md:col-span-2 bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="pincode" onkeyup="autoFill(this.value)" placeholder="Pincode" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="text" id="locality" placeholder="Locality" class="bg-slate-100 p-4 rounded-xl outline-none" readonly>
                 <input type="text" id="phone" placeholder="WhatsApp Number" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="rent" placeholder="Rent (₹)" class="bg-slate-50 p-4 rounded-xl outline-none">
-                <div class="md:col-span-2"><input type="file" id="multiImages" multiple class="text-sm"></div>
-                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold shadow-lg">Submit & Earn 3 Coins</button>
+                <input type="file" id="multiImages" multiple class="md:col-span-2 text-sm">
+                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold">Submit</button>
             </div>
         </div>
     </div>
@@ -139,10 +137,8 @@
             formData.append('phone', document.getElementById('phone').value);
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
-            
-            const btn = event.target; btn.innerText = "Processing...";
             await fetch('/api/properties', { method: 'POST', body: formData });
-            alert("Submitted for verification!"); location.reload();
+            alert("Sent for verification!"); location.reload();
         }
 
         function filterProperties() {
@@ -169,9 +165,7 @@
                             <p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p>
                             <p class="text-slate-400 text-xs">${p.locality}</p>
                         </div>
-                        <button onclick="unlockContact(event, '${p.phone}')" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold shadow-lg hover:bg-indigo-600 transition">
-                            <i class="fas fa-lock mr-2"></i> Unlock Contact (1 Coin)
-                        </button>
+                        <button onclick="unlockContact(event, '${p.phone}')" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold shadow-lg">Unlock Contact (1 Coin)</button>
                     </div>
                 `);
             });
@@ -184,9 +178,8 @@
                 pending.forEach(p => {
                     pList.insertAdjacentHTML('beforeend', `
                         <div class="bg-indigo-50 p-6 rounded-[1.5rem] border border-indigo-200 mb-4">
-                            <p class="font-bold text-indigo-900 text-lg">${p.title}</p>
-                            <p class="text-xs text-slate-500 mb-4">Owner Phone: ${p.phone}</p>
-                            <button onclick="verifyProp('${p._id}')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg">Verify & Reward 3 Coins</button>
+                            <p class="font-bold text-indigo-900">${p.title}</p>
+                            <button onclick="verifyProp('${p._id}')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg mt-4">Verify & Reward 3 Coins</button>
                         </div>
                     `);
                 });
@@ -194,43 +187,27 @@
         }
 
         async function verifyProp(id) {
-            // Create the calendar picker element
-            const dateInput = document.createElement('input');
-            dateInput.type = 'date';
-            
-            // Listen for when you pick the date
-            dateInput.addEventListener('change', async () => {
-                const selectedDate = dateInput.value;
-                if(!selectedDate) return;
-
-                const res = await fetch(`/api/admin/verify/${id}`, {
-                    method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ vacantDate: selectedDate })
-                });
-
-                if(res.ok) {
-                    alert("Property Verified! 3 Coins added.");
-                    let c = parseInt(localStorage.getItem('userCoins') || 0);
-                    localStorage.setItem('userCoins', c + 3);
-                    location.reload();
-                } else {
-                    alert("Error verifying. Please try again.");
-                }
+            const date = prompt("Vacant Date? (e.g. 8th March)");
+            if(!date) return;
+            const res = await fetch(`/api/admin/verify/${id}`, {
+                method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ vacantDate: date })
             });
-
-            // Trigger the calendar
-            dateInput.click();
+            if(res.ok) {
+                let c = parseInt(localStorage.getItem('userCoins') || 0);
+                localStorage.setItem('userCoins', c + 3);
+                location.reload();
+            }
         }
 
         function unlockContact(e, phone) {
             let c = parseInt(localStorage.getItem('userCoins') || 0);
-            if(c < 1) return alert("You need 1 coin to unlock!");
+            if(c < 1) return alert("Earn coins by posting a property!");
             if(confirm("Spend 1 coin?")) {
                 localStorage.setItem('userCoins', c - 1);
-                const btn = e.currentTarget || e.target;
-                btn.innerHTML = `<i class="fab fa-whatsapp mr-2"></i> ${phone}`;
-                btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
+                const btn = e.target;
+                btn.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
+                btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold";
                 btn.onclick = () => window.open(`https://wa.me/${phone}`);
                 document.getElementById('userCoins').innerText = c - 1;
             }
