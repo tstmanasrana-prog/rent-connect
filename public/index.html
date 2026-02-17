@@ -25,8 +25,9 @@
                 <h1 class="text-xl font-extrabold tracking-tight">Rent<span class="text-indigo-600">Connect</span></h1>
             </div>
             <div class="flex items-center gap-4 relative">
-                <div id="coinDisplay" class="hidden md:flex items-center bg-amber-50 border border-amber-200 px-4 py-2 rounded-full gap-2">
+                <div id="coinDisplay" onclick="toggleModal('buyCoinsModal')" class="cursor-pointer hidden md:flex items-center bg-amber-50 border border-amber-200 px-4 py-2 rounded-full gap-2 hover:bg-amber-100 transition">
                     <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700 text-sm">0</span>
+                    <i class="fas fa-plus-circle text-amber-400 text-[10px]"></i>
                 </div>
                 <button onclick="toggleModal('postModal')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Post Property</button>
                 <div class="relative inline-block">
@@ -39,6 +40,20 @@
             </div>
         </div>
     </nav>
+
+    <div id="buyCoinsModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[400] p-4 backdrop-blur-md">
+        <div class="bg-white p-8 rounded-[2rem] w-full max-w-sm text-center relative">
+            <button onclick="toggleModal('buyCoinsModal')" class="absolute top-6 right-6 text-slate-300 text-2xl">&times;</button>
+            <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl shadow-inner"><i class="fas fa-coins"></i></div>
+            <h3 class="text-2xl font-black mb-2 text-slate-900">Get More Coins</h3>
+            <p class="text-slate-500 text-sm mb-6 px-4">Unlock 10 owner contacts instantly for just ₹99.</p>
+            
+            <a href="upi://pay?pa=YOUR_UPI_ID&pn=SoulShiftMedia&am=99&cu=INR" class="block w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg mb-4 hover:scale-[1.02] transition transform">
+                Pay ₹99 via UPI
+            </a>
+            <p class="text-[10px] text-slate-400 font-medium">Payment secured by BHIM UPI. <br> Coins will be credited after manual verification.</p>
+        </div>
+    </div>
 
     <section class="hero-pattern text-white py-24 px-6">
         <div class="container mx-auto text-center max-w-4xl">
@@ -114,12 +129,7 @@
 
         function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
         function logout() { localStorage.clear(); location.reload(); }
-        
-        function toggleAuthMode() {
-            isSignUp = !isSignUp;
-            document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none";
-            document.getElementById('authPhone').style.display = isSignUp ? "block" : "none";
-        }
+        function toggleAuthMode() { isSignUp = !isSignUp; document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none"; document.getElementById('authPhone').style.display = isSignUp ? "block" : "none"; }
 
         async function autoFill(pin) {
             if(pin.length === 6) {
@@ -152,6 +162,14 @@
             formData.append('phone', document.getElementById('phone').value);
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
+            
+            // Option B Hook: Notify Admin via Formspree (Get your ID at formspree.io)
+            // fetch("https://formspree.io/f/YOUR_ID", {
+            //     method: "POST",
+            //     body: JSON.stringify({ msg: `New property: ${document.getElementById('title').value}` }),
+            //     headers: { 'Accept': 'application/json' }
+            // });
+
             await fetch('/api/properties', { method: 'POST', body: formData });
             alert("Sent for verification!"); location.reload();
         }
@@ -225,8 +243,7 @@
         }
 
         async function verifyProp(id) {
-            const date = prompt("Vacant Date? (e.g. 8th March)");
-            if(!date) return;
+            const date = prompt("Vacant Date?"); if(!date) return;
             const res = await fetch(`/api/admin/verify/${id}`, {
                 method: 'PATCH', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ vacantDate: date })
@@ -251,13 +268,12 @@
                 const data = await res.json();
                 if(res.ok) {
                     localStorage.setItem('userCoins', data.newBalance);
-                    localStorage.setItem('unlocked', JSON.stringify(data.unlocked)); // Save list
+                    localStorage.setItem('unlocked', JSON.stringify(data.unlocked));
                     document.getElementById('userCoins').innerText = data.newBalance;
                     
                     const btn = e.currentTarget || e.target;
                     btn.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
                     btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
-                    btn.onclick = () => window.open(`https://wa.me/${phone}`);
                 }
             }
         }

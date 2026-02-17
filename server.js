@@ -26,7 +26,7 @@ const upload = multer({ storage: storage });
 const UserSchema = new mongoose.Schema({
     firstName: String, lastName: String, email: { type: String, unique: true },
     password: String, phone: String, coins: { type: Number, default: 0 },
-    unlockedProperties: [String] // NEW: Stores IDs of unlocked houses
+    unlockedProperties: [String] 
 });
 
 const PropertySchema = new mongoose.Schema({
@@ -90,10 +90,9 @@ app.get('/api/transactions/:email', async (req, res) => {
     res.json(txs);
 });
 
-// FIXED: SPEND COIN & SAVE UNLOCK
+// SPEND COIN & SAVE UNLOCK
 app.post('/api/spend-coin', async (req, res) => {
     const { email, amount, description, propId } = req.body;
-    // $addToSet prevents duplicate IDs in the unlocked list
     const user = await User.findOneAndUpdate(
         { email }, 
         { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } },
