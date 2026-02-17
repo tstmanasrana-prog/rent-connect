@@ -22,6 +22,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
+// SCHEMAS
 const UserSchema = new mongoose.Schema({
     firstName: String, lastName: String, email: { type: String, unique: true },
     password: String, phone: String, coins: { type: Number, default: 0 },
@@ -44,6 +45,7 @@ const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
 const Transaction = mongoose.model('Transaction', TransactionSchema);
 
+// AUTH
 app.post('/api/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -59,6 +61,7 @@ app.post('/api/login', async (req, res) => {
     res.json({ email: user.email, firstName: user.firstName, coins: user.coins, unlocked: user.unlockedProperties });
 });
 
+// PROPERTIES
 app.post('/api/properties', upload.array('images', 12), async (req, res) => {
     const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
     await newProp.save();
@@ -87,6 +90,7 @@ app.get('/api/transactions/:email', async (req, res) => {
     res.json(txs);
 });
 
+// SPEND COIN
 app.post('/api/spend-coin', async (req, res) => {
     const { email, amount, description, propId } = req.body;
     const user = await User.findOneAndUpdate(
@@ -99,6 +103,7 @@ app.post('/api/spend-coin', async (req, res) => {
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
+// ADMIN: VERIFY PROPERTY
 app.get('/api/admin/pending', async (req, res) => {
     const pending = await Property.find({ status: 'pending' });
     res.json(pending);
@@ -112,6 +117,28 @@ app.patch('/api/admin/verify/:id', async (req, res) => {
         await tx.save();
         res.json({ ok: true, newBalance: user.coins });
     } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// NEW ADMIN ROUTE: ADD COINS MANUALLY (For UPI Purchases)
+app.post('/api/admin/add-coins', async (req, res) => {
+    const { email, amount } = req.body;
+    try {
+        const user = await User.findOneAndUpdate(
+            { email }, 
+            { $inc: { coins: amount } }, 
+            { new: true }
+        );
+        if (!user) return res.status(404).json({ error: "User not found" });
+        
+        const tx = new Transaction({ 
+            userEmail: email, 
+            type: 'earned', 
+            amount: amount, 
+            description: "Purchased Coins (UPI)" 
+        });
+        await tx.save();
+        res.json({ ok: true, newBalance: user.coins });
+    } catch (err) { res.status(500).json({ error: "Failed to add coins" }); }
 });
 
 const PORT = process.env.PORT || 10000;

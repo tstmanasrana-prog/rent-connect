@@ -14,6 +14,7 @@
         .admin-only { display: none; }
         .admin-mode .admin-only { display: block; }
         #galleryOverlay img { max-height: 80vh; object-fit: contain; }
+        .qr-frame { border: 8px solid white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -46,30 +47,44 @@
             <button onclick="toggleModal('buyCoinsModal')" class="absolute top-6 right-6 text-slate-300 text-2xl">&times;</button>
             <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl shadow-inner"><i class="fas fa-coins"></i></div>
             <h3 class="text-2xl font-black mb-2 text-slate-900">Get More Coins</h3>
-            <p class="text-slate-500 text-sm mb-6 px-4">Unlock 10 owner contacts instantly for just ₹99.</p>
+            <p class="text-slate-500 text-sm mb-6 px-4">Unlock 3 owner contacts instantly for just ₹299.</p>
             
-            <a href="upi://pay?pa=YOUR_UPI_ID&pn=SoulShiftMedia&am=99&cu=INR" class="block w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg mb-4 hover:scale-[1.02] transition transform">
-                Pay ₹99 via UPI
+            <div class="mb-6 flex flex-col items-center">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=9686995600@ybl%26pn=SoulShiftMedia%26am=299%26cu=INR" 
+                     class="qr-frame rounded-2xl mb-3" alt="UPI QR Code">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Scan to Pay ₹299</p>
+            </div>
+
+            <a href="upi://pay?pa=9686995600@ybl&pn=SoulShiftMedia&am=299&cu=INR" onclick="showVerifyStep()" class="block w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg mb-4 hover:scale-[1.02] transition transform">
+                Pay via App
             </a>
-            <p class="text-[10px] text-slate-400 font-medium">After payment, WhatsApp us with screenshot <br> to credit coins manually.</p>
+
+            <div id="verifyStep" class="hidden border-t pt-4 mt-2">
+                <p class="text-xs text-slate-400 mb-3 font-medium text-center">Payment done? Click below to notify us.</p>
+                <button onclick="requestCoinCredit()" class="w-full bg-emerald-500 text-white p-3 rounded-xl font-bold text-sm shadow-md hover:bg-emerald-600 transition">I have paid, Add Coins</button>
+            </div>
         </div>
     </div>
 
-    <section class="hero-pattern text-white py-24 px-6">
-        <div class="container mx-auto text-center max-w-4xl">
-            <h2 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Find your next home <br/><span class="text-indigo-300">without brokerage.</span></h2>
-            <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
-                <input type="text" id="searchInput" oninput="filterProperties()" placeholder="Enter Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
-                <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">Search</button>
-            </div>
+    <section class="hero-pattern text-white py-24 px-6 text-center">
+        <h2 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Find your next home <br/><span class="text-indigo-300">without brokerage.</span></h2>
+        <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
+            <input type="text" id="searchInput" oninput="filterProperties()" placeholder="Enter Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
+            <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">Search</button>
         </div>
     </section>
 
     <main class="container mx-auto px-6 py-12">
         <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
         <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        
         <section id="adminSection" class="admin-only mt-20 border-t-4 border-indigo-600 pt-10">
-            <h2 class="text-2xl font-black mb-4">Pending Verification</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black">Admin: Pending Verification</h2>
+                <button onclick="manualAddCoins()" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+                    <i class="fas fa-plus mr-2"></i> Add Coins to User
+                </button>
+            </div>
             <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </section>
     </main>
@@ -104,7 +119,7 @@
 
     <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[100] p-4 backdrop-blur-md">
         <div class="bg-white p-8 rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 class="text-2xl font-black mb-6">List Property</h3>
+            <h3 class="text-2xl font-black mb-6 text-center">List Property</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" id="title" placeholder="Title" class="md:col-span-2 bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="pincode" onkeyup="autoFill(this.value)" placeholder="Pincode" class="bg-slate-50 p-4 rounded-xl outline-none">
@@ -112,7 +127,7 @@
                 <input type="text" id="phone" placeholder="WhatsApp Number" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="rent" placeholder="Rent (₹)" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="file" id="multiImages" multiple class="md:col-span-2 text-sm">
-                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold">Submit</button>
+                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold">Submit Listing</button>
             </div>
         </div>
     </div>
@@ -130,6 +145,26 @@
         function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
         function logout() { localStorage.clear(); location.reload(); }
         function toggleAuthMode() { isSignUp = !isSignUp; document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none"; document.getElementById('authPhone').style.display = isSignUp ? "block" : "none"; }
+        function showVerifyStep() { setTimeout(() => { document.getElementById('verifyStep').classList.remove('hidden'); }, 1500); }
+
+        async function requestCoinCredit() {
+            const email = localStorage.getItem('userEmail');
+            fetch("https://formspree.io/f/xojnwzlg", {
+                method: "POST",
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject: "PAYMENT VERIFICATION REQUEST", message: `User ${email} claims ₹299 paid. Verify UPI and add 3 coins via Admin Panel.` })
+            });
+            alert("Request sent! Admin will verify payment and add 3 coins to your account shortly.");
+            toggleModal('buyCoinsModal');
+        }
+
+        async function manualAddCoins() {
+            const email = prompt("Enter User Email:");
+            const amount = prompt("Enter Coins to Add (e.g. 3):");
+            if(!email || !amount) return;
+            const res = await fetch('/api/admin/add-coins', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: parseInt(amount) }) });
+            if(res.ok) { alert("Coins added successfully!"); } else { alert("User not found!"); }
+        }
 
         async function autoFill(pin) {
             if(pin.length === 6) {
@@ -155,10 +190,9 @@
         async function submitProperty() {
             const title = document.getElementById('title').value;
             const locality = document.getElementById('locality').value;
-            const ownerEmail = localStorage.getItem('userEmail');
-
+            const email = localStorage.getItem('userEmail');
             const formData = new FormData();
-            formData.append('ownerEmail', ownerEmail);
+            formData.append('ownerEmail', email);
             formData.append('title', title);
             formData.append('locality', locality);
             formData.append('pincode', document.getElementById('pincode').value);
@@ -167,18 +201,14 @@
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
             
-            // FORMSPREE LIVE NOTIFICATION
             fetch("https://formspree.io/f/xojnwzlg", {
                 method: "POST",
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    subject: "New Property Alert | Soul Shift Media",
-                    message: `New property listed: ${title} in ${locality}. Submitted by owner: ${ownerEmail}`
-                })
+                body: JSON.stringify({ subject: "New Property Listing", message: `New: ${title} in ${locality} by ${email}` })
             });
 
             await fetch('/api/properties', { method: 'POST', body: formData });
-            alert("Sent for verification! You will get an email notification soon."); location.reload();
+            alert("Listing sent for verification!"); location.reload();
         }
 
         function filterProperties() {
@@ -202,21 +232,15 @@
             props.forEach(p => {
                 const imgsData = encodeURIComponent(JSON.stringify(p.images));
                 const isUnlocked = unlockedList.includes(p._id);
-                
                 list.insertAdjacentHTML('beforeend', `
                     <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4">
                         <div class="relative cursor-pointer group" onclick="openGallery('${imgsData}')">
                             <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition shadow-inner">
-                            <div class="absolute bottom-6 right-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md">
-                                <i class="fas fa-camera mr-1"></i> ${p.images.length} Photos
-                            </div>
+                            <div class="absolute bottom-6 right-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md"><i class="fas fa-camera mr-1"></i> ${p.images.length} Photos</div>
                             <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
                         </div>
                         <h4 class="font-bold text-lg text-slate-800">${p.title}</h4>
-                        <div class="flex justify-between items-center mt-1 mb-4">
-                            <p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p>
-                            <p class="text-slate-400 text-xs">${p.locality}</p>
-                        </div>
+                        <div class="flex justify-between items-center mt-1 mb-4"><p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p><p class="text-slate-400 text-xs">${p.locality}</p></div>
                         <button onclick="${isUnlocked ? `window.open('https://wa.me/${p.phone}')` : `unlockContact(event, '${p.phone}', '${p._id}')`}" 
                                 class="w-full ${isUnlocked ? 'bg-green-600' : 'bg-slate-900'} text-white p-4 rounded-xl font-bold shadow-lg hover:scale-[1.01] transition">
                             ${isUnlocked ? `<i class="fab fa-whatsapp"></i> ${p.phone}` : 'Unlock Contact (1 Coin)'}
@@ -242,24 +266,17 @@
         }
 
         async function verifyProp(id) {
-            const date = prompt("Set Vacant Date (e.g. 15th March):"); if(!date) return;
-            const res = await fetch(`/api/admin/verify/${id}`, {
-                method: 'PATCH', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ vacantDate: date })
-            });
+            const date = prompt("Vacant Date?"); if(!date) return;
+            const res = await fetch(`/api/admin/verify/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ vacantDate: date }) });
             const data = await res.json();
             if(res.ok) { localStorage.setItem('userCoins', data.newBalance); location.reload(); }
         }
 
         async function unlockContact(e, phone, propId) {
             let c = parseInt(localStorage.getItem('userCoins') || 0); const email = localStorage.getItem('userEmail');
-            if(c < 1) return alert("Earn coins by posting a property or click the Coin icon to buy!");
-            if(confirm("Unlock this contact for 1 Coin?")) {
-                const res = await fetch('/api/spend-coin', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email, amount: 1, description: "Contact Unlock", propId })
-                });
+            if(c < 1) { toggleModal('buyCoinsModal'); return; }
+            if(confirm("Unlock contact for 1 Coin?")) {
+                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email, amount: 1, description: "Contact Unlock", propId: propId }) });
                 const data = await res.json();
                 if(res.ok) {
                     localStorage.setItem('userCoins', data.newBalance);
