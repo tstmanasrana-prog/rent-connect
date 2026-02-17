@@ -13,7 +13,6 @@
         .hero-pattern { background-color: #4338ca; background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%); }
         .admin-only { display: none; }
         .admin-mode .admin-only { display: block; }
-        /* Gallery Styles */
         #galleryOverlay img { max-height: 80vh; object-fit: contain; }
     </style>
 </head>
@@ -46,7 +45,16 @@
     </section>
 
     <main class="container mx-auto px-6 py-12">
+        <div id="userDashboard" class="hidden mb-16">
+            <h3 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                <i class="fas fa-user-circle text-indigo-600"></i> My Listings
+            </h3>
+            <div id="my-property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        </div>
+
+        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
         <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+        
         <section id="adminSection" class="admin-only mt-20 border-t-4 border-indigo-600 pt-10">
             <h2 class="text-2xl font-black mb-4">Pending Verification</h2>
             <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
@@ -163,7 +171,6 @@
             });
         }
 
-        // GALLERY LOGIC
         function openGallery(imagesJson) {
             currentPropImages = JSON.parse(decodeURIComponent(imagesJson));
             currentImgIdx = 0;
@@ -188,15 +195,21 @@
             updateGalleryUI();
         }
 
+        async function hideProperty(id) {
+            if(confirm("Are you sure? This listing will be removed from public view.")){
+                const res = await fetch(`/api/properties/hide/${id}`, { method: 'PATCH' });
+                if(res.ok) location.reload();
+            }
+        }
+
         async function loadData() {
+            // 1. PUBLIC LISTINGS
             const res = await fetch('/api/properties');
             const props = await res.json();
             const list = document.getElementById('property-list');
             list.innerHTML = '';
             props.forEach(p => {
-                // Prepare images for gallery
                 const imgsData = encodeURIComponent(JSON.stringify(p.images));
-                
                 list.insertAdjacentHTML('beforeend', `
                     <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4">
                         <div class="relative cursor-pointer group" onclick="openGallery('${imgsData}')">
@@ -216,6 +229,33 @@
                 `);
             });
 
+            // 2. USER DASHBOARD
+            const email = localStorage.getItem('userEmail');
+            if(email) {
+                document.getElementById('userDashboard').classList.remove('hidden');
+                const myRes = await fetch(`/api/my-properties/${email}`);
+                const myProps = await myRes.json();
+                const myList = document.getElementById('my-property-list');
+                myList.innerHTML = '';
+                myProps.forEach(p => {
+                    const statusColor = p.status === 'verified' ? 'bg-green-500' : 'bg-amber-500';
+                    myList.insertAdjacentHTML('beforeend', `
+                        <div class="bg-white rounded-[2rem] border border-slate-200 p-4 relative opacity-80 hover:opacity-100 transition">
+                            <span class="absolute top-6 left-6 ${statusColor} text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase z-10">${p.status}</span>
+                            <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-xl mb-3 grayscale-[0.5]">
+                            <h4 class="font-bold text-sm truncate">${p.title}</h4>
+                            <div class="flex justify-between items-center mt-3">
+                                <p class="text-indigo-600 font-bold text-sm">₹${p.rent}</p>
+                                <button onclick="hideProperty('${p._id}')" class="text-rose-500 hover:text-rose-700 text-xs font-bold">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            // 3. ADMIN LISTINGS
             if(document.body.classList.contains('admin-mode')) {
                 const adminRes = await fetch('/api/admin/pending');
                 const pending = await adminRes.json();
@@ -251,9 +291,9 @@
             if(c < 1) return alert("Earn coins by posting a property!");
             if(confirm("Spend 1 coin?")) {
                 localStorage.setItem('userCoins', c - 1);
-                const btn = e.target;
+                const btn = e.currentTarget || e.target;
                 btn.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
-                btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold";
+                btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
                 btn.onclick = () => window.open(`https://wa.me/${phone}`);
                 document.getElementById('userCoins').innerText = c - 1;
             }
