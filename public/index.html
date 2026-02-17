@@ -15,52 +15,41 @@
         .admin-mode .admin-only { display: block; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body class="bg-slate-50">
 
-    <nav class="glass-nav border-b border-slate-200 sticky top-0 z-50 px-6 py-4">
+    <nav class="glass-nav border-b sticky top-0 z-50 px-6 py-4">
         <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><i class="fas fa-home"></i></div>
-                <h1 class="text-xl font-extrabold">Rent<span class="text-indigo-600">Connect</span></h1>
-            </div>
+            <h1 class="text-xl font-extrabold">Rent<span class="text-indigo-600">Connect</span></h1>
             <div class="flex items-center gap-4">
-                <div id="coinDisplay" class="hidden flex items-center bg-amber-50 border border-amber-200 px-4 py-2 rounded-full gap-2">
-                    <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700 text-sm">0</span>
+                <div id="coinDisplay" class="hidden flex items-center bg-amber-50 px-4 py-2 rounded-full gap-2 border border-amber-200">
+                    <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700">0</span>
                 </div>
-                <button onclick="toggleModal('postModal')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm">Post Property</button>
+                <button onclick="toggleModal('postModal')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm">Post</button>
                 <button onclick="toggleModal('authModal')" id="loginBtn" class="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold text-sm">Sign In</button>
             </div>
         </div>
     </nav>
 
-    <section class="hero-pattern text-white py-20 px-6">
-        <div class="container mx-auto text-center max-w-4xl">
-            <h2 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Direct Owner Rentals <br/><span class="text-indigo-300">No Brokerage.</span></h2>
-            <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
-                <input type="text" id="searchInput" 
-       oninput="filterProperties()" 
-       placeholder="Enter Locality or Pincode..." 
-       class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none">
-                <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">
-    Search
-</button>
-            </div>
+    <section class="hero-pattern text-white py-20 px-6 text-center">
+        <h2 class="text-4xl md:text-5xl font-extrabold mb-6">Direct Rentals in Baripada</h2>
+        <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
+            <input type="text" id="searchInput" oninput="filterProperties()" placeholder="Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 outline-none rounded-xl">
+            <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">Search</button>
         </div>
     </section>
 
     <main class="container mx-auto px-6 py-12">
-        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
         <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-        <section id="adminSection" class="admin-only mt-20 border-t-2 border-indigo-100 pt-10">
-            <h2 class="text-xl font-bold mb-4 text-indigo-600">Admin: Pending Verification</h2>
-            <div id="pending-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        <section id="adminSection" class="admin-only mt-20 pt-10 border-t">
+            <h2 class="text-xl font-bold mb-4 text-indigo-600">Admin Panel</h2>
+            <div id="pending-list" class="grid grid-cols-1 gap-4"></div>
         </section>
     </main>
 
-    <div id="authModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[200] p-4 backdrop-blur-md">
+    <div id="authModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[100] p-4 backdrop-blur-md">
         <div class="bg-white p-8 rounded-[2rem] w-full max-w-md relative">
-            <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl">&times;</button>
-            <h3 id="authTitle" class="text-2xl font-black mb-6">Join RentConnect</h3>
+            <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-2xl">&times;</button>
+            <h3 id="authTitle" class="text-2xl font-black mb-6">Create Account</h3>
             <div class="space-y-4">
                 <div id="nameFields" class="grid grid-cols-2 gap-4">
                     <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
@@ -69,30 +58,30 @@
                 <input type="email" id="authEmail" placeholder="Email" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="text" id="authPhone" placeholder="Mobile" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <button onclick="handleAuth()" id="authBtn" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold">Submit</button>
-                <p class="text-center text-sm"><button onclick="toggleAuthMode()" id="toggleBtn" class="text-indigo-600 font-bold">Switch Login/Signup</button></p>
+                <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold">Continue</button>
+                <button onclick="toggleAuthMode()" class="w-full text-indigo-600 text-sm font-bold mt-2">Switch Login/Signup</button>
             </div>
         </div>
     </div>
 
     <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[100] p-4 backdrop-blur-md">
         <div class="bg-white p-8 rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-black">List Property</h3><button onclick="toggleModal('postModal')" class="text-2xl">&times;</button></div>
+            <h3 class="text-2xl font-black mb-6 text-center">List Your Property</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="text" id="title" placeholder="Title" class="md:col-span-2 bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="pincode" onkeyup="autoFill(this.value)" placeholder="Pincode" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="text" id="locality" placeholder="Locality" class="bg-slate-100 p-4 rounded-xl outline-none" readonly>
-                <input type="text" id="phone" placeholder="WhatsApp Number" class="bg-slate-50 p-4 rounded-xl outline-none">
+                <input type="text" id="phone" placeholder="WhatsApp" class="bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="number" id="rent" placeholder="Rent (₹)" class="bg-slate-50 p-4 rounded-xl outline-none">
-                <div class="md:col-span-2"><input type="file" id="multiImages" multiple class="w-full text-sm"></div>
-                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold shadow-lg">Submit (Earn 3 Coins)</button>
+                <input type="file" id="multiImages" multiple class="md:col-span-2 text-sm">
+                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-4 rounded-xl font-bold">Submit (Earn 3 Coins)</button>
             </div>
         </div>
     </div>
 
-    <footer class="py-10 text-center border-t border-slate-200 mt-20">
-        <p class="text-slate-400 text-xs">© 2026 Soul Shift Media</p>
-        <button onclick="enterAdmin()" class="text-slate-200 hover:text-indigo-400 transition mt-2 text-[10px]">Admin Login</button>
+    <footer class="py-10 text-center text-slate-400">
+        <p class="text-xs">© 2026 Soul Shift Media</p>
+        <button onclick="enterAdmin()" class="text-[10px] mt-2 opacity-20">Admin Login</button>
     </footer>
 
     <script>
@@ -102,6 +91,7 @@
             isSignUp = !isSignUp;
             document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none";
             document.getElementById('authPhone').style.display = isSignUp ? "block" : "none";
+            document.getElementById('authTitle').innerText = isSignUp ? "Create Account" : "Welcome Back";
         }
 
         async function autoFill(pin) {
@@ -113,55 +103,61 @@
         }
 
         async function handleAuth() {
-            const firstName = document.getElementById('authFirstName').value;
-            const lastName = document.getElementById('authLastName').value;
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const phone = document.getElementById('authPhone').value;
-            const body = isSignUp ? { firstName, lastName, email, password, phone } : { email, password };
+            const body = {
+                firstName: document.getElementById('authFirstName').value,
+                lastName: document.getElementById('authLastName').value,
+                email: document.getElementById('authEmail').value,
+                password: document.getElementById('authPassword').value,
+                phone: document.getElementById('authPhone').value
+            };
             const res = await fetch(isSignUp ? '/api/signup' : '/api/login', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(body)
             });
             const data = await res.json();
             if(res.ok) {
                 localStorage.setItem('userName', data.firstName);
-                localStorage.setItem('userEmail', data.email);
                 localStorage.setItem('userCoins', data.coins);
+                localStorage.setItem('userEmail', data.email);
                 location.reload();
             } else { alert(data.error); }
         }
 
         async function submitProperty() {
-            const email = localStorage.getItem('userEmail');
-            if(!email) return alert("Please Sign In!");
             const formData = new FormData();
-            formData.append('ownerEmail', email);
+            formData.append('ownerEmail', localStorage.getItem('userEmail'));
             formData.append('title', document.getElementById('title').value);
             formData.append('locality', document.getElementById('locality').value);
+            formData.append('pincode', document.getElementById('pincode').value);
             formData.append('rent', document.getElementById('rent').value);
             formData.append('phone', document.getElementById('phone').value);
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
             await fetch('/api/properties', { method: 'POST', body: formData });
-            alert("Sent for verification!"); location.reload();
+            alert("Submitted for verification!"); location.reload();
+        }
+
+        function filterProperties() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('#property-list > div').forEach(card => {
+                card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none";
+            });
         }
 
         async function loadData() {
             const res = await fetch('/api/properties');
             const props = await res.json();
             const list = document.getElementById('property-list');
-            list.innerHTML = '';
             props.forEach(p => {
                 list.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 overflow-hidden">
+                    <div class="bg-white rounded-[2rem] shadow-sm p-4 overflow-hidden border">
                         <div class="relative">
                             <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4">
-                            <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1 rounded-full font-bold">Vacant: ${p.vacantDate}</div>
+                            <span class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1 rounded-full font-bold">Vacant: ${p.vacantDate}</span>
                         </div>
-                        <h4 class="font-bold text-lg">${p.title}</h4>
-                        <div class="flex justify-between items-center mb-4"><p class="text-indigo-600 font-bold text-xl">₹${p.rent}</p><p class="text-slate-400 text-xs">${p.locality}</p></div>
-                        <button onclick="unlockContact('${p._id}', '${p.phone}')" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold shadow-lg">Unlock Contact (1 Coin)</button>
+                        <h4 class="font-bold">${p.title}</h4>
+                        <p class="text-indigo-600 font-bold mb-4">₹${p.rent} | ${p.locality}</p>
+                        <button onclick="unlockContact(event, '${p.phone}')" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold">Unlock Contact (1 Coin)</button>
                     </div>
                 `);
             });
@@ -170,21 +166,19 @@
                 const adminRes = await fetch('/api/admin/pending');
                 const pending = await adminRes.json();
                 const pList = document.getElementById('pending-list');
-                pList.innerHTML = '';
                 pending.forEach(p => {
                     pList.insertAdjacentHTML('beforeend', `
-                        <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 mb-4">
-                            <p class="font-bold text-indigo-900">${p.title} (${p.phone})</p>
-                            <button onclick="verifyProp('${p._id}')" class="mt-4 w-full bg-indigo-600 text-white py-3 rounded-xl font-bold">Verify & Reward 3 Coins</button>
+                        <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-200">
+                            <p class="font-bold">${p.title} (${p.phone})</p>
+                            <button onclick="verifyProp('${p._id}')" class="mt-4 w-full bg-indigo-600 text-white p-3 rounded-xl font-bold">Verify & Reward 3 Coins</button>
                         </div>
                     `);
                 });
             }
         }
 
-        async function enterAdmin() {
-            const pass = prompt("Admin Password:");
-            if(pass === 'soulshift2026') {
+        function enterAdmin() {
+            if(prompt("Admin Password:") === "soulshift2026") {
                 document.body.classList.add('admin-mode');
                 loadData();
                 document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' });
@@ -195,7 +189,6 @@
             const dateInput = document.createElement('input');
             dateInput.type = 'date';
             dateInput.onchange = async () => {
-                if(!dateInput.value) return;
                 await fetch(`/api/admin/verify/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ vacantDate: dateInput.value }) });
                 let c = parseInt(localStorage.getItem('userCoins') || 0);
                 localStorage.setItem('userCoins', c + 3);
@@ -204,44 +197,27 @@
             dateInput.click();
         }
 
-        async function unlockContact(id, phone) {
+        function unlockContact(e, phone) {
             let c = parseInt(localStorage.getItem('userCoins') || 0);
-            if(c < 1) return alert("Earn 3 coins by posting a property!");
-            if(confirm("Spend 1 Coin?")) {
+            if(c < 1) return alert("You need 1 coin!");
+            if(confirm("Spend 1 coin?")) {
                 localStorage.setItem('userCoins', c - 1);
+                e.target.innerHTML = `<i class="fab fa-whatsapp mr-2"></i> ${phone}`;
+                e.target.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold";
+                e.target.onclick = () => window.open(`https://wa.me/${phone}`);
                 document.getElementById('userCoins').innerText = c - 1;
-                event.target.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
-                event.target.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
-                event.target.onclick = () => window.open(`https://wa.me/${phone}`, '_blank');
             }
         }
 
         window.onload = () => {
             const name = localStorage.getItem('userName');
-            const coins = localStorage.getItem('userCoins');
             if(name) {
                 document.getElementById('coinDisplay').classList.remove('hidden');
-                document.getElementById('userCoins').innerText = coins;
+                document.getElementById('userCoins').innerText = localStorage.getItem('userCoins');
                 document.getElementById('loginBtn').innerText = `Hi, ${name}`;
             }
             loadData();
         };
-    // Step 1: The Logic for Filtering
-function filterProperties() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const allCards = document.querySelectorAll('#property-list > div');
-    
-    allCards.forEach(card => {
-        // This looks at all the text inside the property card (Title, Locality, Pincode)
-        const cardText = card.innerText.toLowerCase();
-        
-        if (cardText.includes(searchTerm)) {
-            card.style.display = "block"; // Show if it matches
-        } else {
-            card.style.display = "none";  // Hide if it doesn't match
-        }
-    });
-}
     </script>
 </body>
 </html>

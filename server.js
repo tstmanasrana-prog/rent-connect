@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// 1. CLOUDINARY CONFIG (Ensure these keys are in Render Settings)
+// CLOUDINARY CONFIG
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
     api_key: process.env.CLOUDINARY_KEY,
@@ -24,15 +24,14 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-// 2. DATABASE SCHEMAS
+// SCHEMAS
 const UserSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     phone: { type: String, required: true },
-    coins: { type: Number, default: 0 },
-    unlockedListings: [String]
+    coins: { type: Number, default: 0 }
 });
 
 const PropertySchema = new mongoose.Schema({
@@ -47,34 +46,28 @@ const PropertySchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
 
-// 3. AUTHENTICATION
+// AUTH
 app.post('/api/signup', async (req, res) => {
     try {
         const { firstName, lastName, email, password, phone } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ firstName, lastName, email, password: hashedPassword, phone, coins: 0 });
         await newUser.save();
-        const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET || 'SECRET');
-        res.json({ token, coins: 0, email: newUser.email, firstName: newUser.firstName });
-    } catch (error) { res.status(400).json({ error: "User already exists or missing data" }); }
+        res.json({ coins: 0, email: newUser.email, firstName: newUser.firstName });
+    } catch (error) { res.status(400).json({ error: "User already exists" }); }
 });
 
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(400).json({ error: "Invalid credentials" });
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'SECRET');
-    res.json({ token, coins: user.coins, email: user.email, firstName: user.firstName });
+    const user = await User.findOne({ email: req.body.email });
+    if (!user || !(await bcrypt.compare(req.body.password, user.password))) return res.status(400).json({ error: "Invalid credentials" });
+    res.json({ coins: user.coins, email: user.email, firstName: user.firstName });
 });
 
-// 4. PROPERTY ACTIONS
+// PROPERTIES
 app.post('/api/properties', upload.array('images', 12), async (req, res) => {
-    try {
-        const imageUrls = req.files.map(file => file.path);
-        const newProp = new Property({ ...req.body, images: imageUrls });
-        await newProp.save();
-        res.json({ message: "Success" });
-    } catch (error) { res.status(500).json({ error: error.message }); }
+    const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
+    await newProp.save();
+    res.json({ message: "Success" });
 });
 
 app.get('/api/properties', async (req, res) => {
@@ -82,19 +75,18 @@ app.get('/api/properties', async (req, res) => {
     res.json(props);
 });
 
-// 5. ADMIN ACTIONS
+// ADMIN
 app.get('/api/admin/pending', async (req, res) => {
     const pending = await Property.find({ status: 'pending' });
     res.json(pending);
 });
 
 app.patch('/api/admin/verify/:id', async (req, res) => {
-    const { vacantDate } = req.body;
-    const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate });
+    const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate: req.body.vacantDate });
     await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } });
     res.json({ message: "Verified" });
 });
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Live on ${PORT}`));
-mongoose.connect(process.env.MONGODB_URI).then(() => console.log('✅ DB Connected'));
+mongoose.connect(process.env.MONGODB_URI);
