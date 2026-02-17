@@ -22,6 +22,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
+// SCHEMAS
 const UserSchema = new mongoose.Schema({
     firstName: String, lastName: String, email: { type: String, unique: true },
     password: String, phone: String, coins: { type: Number, default: 0 }
@@ -30,12 +31,22 @@ const UserSchema = new mongoose.Schema({
 const PropertySchema = new mongoose.Schema({
     title: String, rent: Number, phone: String, pincode: String,
     locality: String, ownerEmail: String, images: [String],
-    status: { type: String, default: 'pending' }, // pending, verified, unavailable
+    status: { type: String, default: 'pending' },
     vacantDate: { type: String, default: 'Available Now' }
+});
+
+// NEW: Transaction Schema for Coin Tracking
+const TransactionSchema = new mongoose.Schema({
+    userEmail: String,
+    type: String, // 'earned' or 'spent'
+    amount: Number,
+    description: String,
+    date: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
+const Transaction = mongoose.model('Transaction', TransactionSchema);
 
 // AUTH
 app.post('/api/signup', async (req, res) => {
@@ -61,14 +72,11 @@ app.post('/api/properties', upload.array('images', 12), async (req, res) => {
 });
 
 app.get('/api/properties', async (req, res) => {
-    // Only show verified properties to the public
     const props = await Property.find({ status: 'verified' }).sort({ _id: -1 });
     res.json(props);
 });
 
-// USER DASHBOARD ROUTE
 app.get('/api/my-properties/:email', async (req, res) => {
-    // Fetch all properties (Verified & Pending) for this user, but NOT unavailable ones
     const props = await Property.find({ 
         ownerEmail: req.params.email, 
         status: { $ne: 'unavailable' } 
@@ -76,12 +84,26 @@ app.get('/api/my-properties/:email', async (req, res) => {
     res.json(props);
 });
 
-// SOFT DELETE ROUTE
 app.patch('/api/properties/hide/:id', async (req, res) => {
     try {
         await Property.findByIdAndUpdate(req.params.id, { status: 'unavailable' });
         res.json({ ok: true });
     } catch (err) { res.status(500).json({ error: "Delete failed" }); }
+});
+
+// NEW: TRANSACTION ROUTES
+app.get('/api/transactions/:email', async (req, res) => {
+    const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
+    res.json(txs);
+});
+
+// NEW: SPEND COIN LOGIC
+app.post('/api/spend-coin', async (req, res) => {
+    const { email, amount, description } = req.body;
+    const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount } });
+    const tx = new Transaction({ userEmail: email, type: 'spent', amount, description });
+    await tx.save();
+    res.json({ newBalance: user.coins - amount });
 });
 
 // ADMIN
@@ -97,6 +119,16 @@ app.patch('/api/admin/verify/:id', async (req, res) => {
             vacantDate: req.body.vacantDate 
         });
         await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } });
+        
+        // Record Earned Transaction
+        const tx = new Transaction({ 
+            userEmail: property.ownerEmail, 
+            type: 'earned', 
+            amount: 3, 
+            description: `Verified listing: ${property.title}` 
+        });
+        await tx.save();
+
         res.json({ ok: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

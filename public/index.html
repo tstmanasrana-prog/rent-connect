@@ -24,12 +24,18 @@
                 <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg"><i class="fas fa-home"></i></div>
                 <h1 class="text-xl font-extrabold tracking-tight">Rent<span class="text-indigo-600">Connect</span></h1>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 relative">
                 <div id="coinDisplay" class="hidden md:flex items-center bg-amber-50 border border-amber-200 px-4 py-2 rounded-full gap-2">
                     <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700 text-sm">0</span>
                 </div>
                 <button onclick="toggleModal('postModal')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Post Property</button>
-                <button onclick="toggleModal('authModal')" id="loginBtn" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Sign In</button>
+                <div class="relative inline-block">
+                    <button id="loginBtn" onclick="toggleModal('authModal')" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Sign In</button>
+                    <div id="userMenu" class="hidden absolute right-0 mt-3 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-[300]">
+                        <a href="dashboard.html" class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"><i class="fas fa-th-large mr-2 text-indigo-600"></i> Dashboard</a>
+                        <button onclick="logout()" class="w-full text-left px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50"><i class="fas fa-sign-out-alt mr-2"></i> Logout</button>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -45,13 +51,6 @@
     </section>
 
     <main class="container mx-auto px-6 py-12">
-        <div id="userDashboard" class="hidden mb-16">
-            <h3 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                <i class="fas fa-user-circle text-indigo-600"></i> My Listings
-            </h3>
-            <div id="my-property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-        </div>
-
         <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
         <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         
@@ -115,6 +114,8 @@
         let currentImgIdx = 0;
 
         function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+        function logout() { localStorage.clear(); location.reload(); }
+        
         function toggleAuthMode() {
             isSignUp = !isSignUp;
             document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none";
@@ -195,15 +196,7 @@
             updateGalleryUI();
         }
 
-        async function hideProperty(id) {
-            if(confirm("Are you sure? This listing will be removed from public view.")){
-                const res = await fetch(`/api/properties/hide/${id}`, { method: 'PATCH' });
-                if(res.ok) location.reload();
-            }
-        }
-
         async function loadData() {
-            // 1. PUBLIC LISTINGS
             const res = await fetch('/api/properties');
             const props = await res.json();
             const list = document.getElementById('property-list');
@@ -229,33 +222,6 @@
                 `);
             });
 
-            // 2. USER DASHBOARD
-            const email = localStorage.getItem('userEmail');
-            if(email) {
-                document.getElementById('userDashboard').classList.remove('hidden');
-                const myRes = await fetch(`/api/my-properties/${email}`);
-                const myProps = await myRes.json();
-                const myList = document.getElementById('my-property-list');
-                myList.innerHTML = '';
-                myProps.forEach(p => {
-                    const statusColor = p.status === 'verified' ? 'bg-green-500' : 'bg-amber-500';
-                    myList.insertAdjacentHTML('beforeend', `
-                        <div class="bg-white rounded-[2rem] border border-slate-200 p-4 relative opacity-80 hover:opacity-100 transition">
-                            <span class="absolute top-6 left-6 ${statusColor} text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase z-10">${p.status}</span>
-                            <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-xl mb-3 grayscale-[0.5]">
-                            <h4 class="font-bold text-sm truncate">${p.title}</h4>
-                            <div class="flex justify-between items-center mt-3">
-                                <p class="text-indigo-600 font-bold text-sm">₹${p.rent}</p>
-                                <button onclick="hideProperty('${p._id}')" class="text-rose-500 hover:text-rose-700 text-xs font-bold">
-                                    <i class="fas fa-trash-alt"></i> Delete
-                                </button>
-                            </div>
-                        </div>
-                    `);
-                });
-            }
-
-            // 3. ADMIN LISTINGS
             if(document.body.classList.contains('admin-mode')) {
                 const adminRes = await fetch('/api/admin/pending');
                 const pending = await adminRes.json();
@@ -286,16 +252,25 @@
             }
         }
 
-        function unlockContact(e, phone) {
+        async function unlockContact(e, phone) {
             let c = parseInt(localStorage.getItem('userCoins') || 0);
+            const email = localStorage.getItem('userEmail');
             if(c < 1) return alert("Earn coins by posting a property!");
             if(confirm("Spend 1 coin?")) {
-                localStorage.setItem('userCoins', c - 1);
-                const btn = e.currentTarget || e.target;
-                btn.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
-                btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
-                btn.onclick = () => window.open(`https://wa.me/${phone}`);
-                document.getElementById('userCoins').innerText = c - 1;
+                const res = await fetch('/api/spend-coin', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email: email, amount: 1, description: "Unlocked contact details" })
+                });
+                if(res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('userCoins', data.newBalance);
+                    const btn = e.currentTarget || e.target;
+                    btn.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
+                    btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
+                    btn.onclick = () => window.open(`https://wa.me/${phone}`);
+                    document.getElementById('userCoins').innerText = data.newBalance;
+                }
             }
         }
 
@@ -312,7 +287,9 @@
             if(name) {
                 document.getElementById('coinDisplay').classList.remove('hidden');
                 document.getElementById('userCoins').innerText = localStorage.getItem('userCoins');
-                document.getElementById('loginBtn').innerText = `Hi, ${name}`;
+                const loginBtn = document.getElementById('loginBtn');
+                loginBtn.innerHTML = `<i class="fas fa-user-circle mr-2"></i> Hi, ${name}`;
+                loginBtn.onclick = () => document.getElementById('userMenu').classList.toggle('hidden');
             }
             loadData();
         };
