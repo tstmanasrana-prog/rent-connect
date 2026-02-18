@@ -28,7 +28,7 @@
                     <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700 text-sm">0</span>
                     <i class="fas fa-plus-circle text-amber-400 text-[10px]"></i>
                 </div>
-                <button onclick="handlePostPropertyClick()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Post Property</button>
+                <button onclick="handlePostPropertyClick()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition hover:bg-indigo-700">Post Property</button>
                 <div class="relative inline-block">
                     <button id="loginBtn" onclick="toggleModal('authModal')" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Sign In</button>
                     <div id="userMenu" class="hidden absolute right-0 mt-3 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-[300]">
@@ -41,8 +41,8 @@
     </nav>
 
     <div id="buyCoinsModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[400] p-4 backdrop-blur-md">
-        <div class="bg-white p-8 rounded-[2rem] w-full max-w-sm text-center relative">
-            <button onclick="toggleModal('buyCoinsModal')" class="absolute top-6 right-6 text-slate-300 text-2xl">&times;</button>
+        <div class="bg-white p-8 rounded-[2rem] w-full max-w-sm text-center relative shadow-2xl">
+            <button onclick="toggleModal('buyCoinsModal')" class="absolute top-6 right-6 text-slate-300 text-2xl transition hover:text-rose-500">&times;</button>
             <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500 text-3xl shadow-inner"><i class="fas fa-coins"></i></div>
             <h3 class="text-2xl font-black mb-2 text-slate-900">Get More Coins</h3>
             <p class="text-slate-500 text-sm mb-6 px-4">Get 3 coins for just ₹299.</p>
@@ -71,31 +71,30 @@
         <input type="password" style="display:none">
 
         <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
-            <input type="text" id="mainPropertySearch" autocomplete="new-password" oninput="filterProperties()" placeholder="Enter Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
-            <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">Search</button>
+            <input type="text" id="mainPropertySearch" autocomplete="new-password" oninput="filterProperties()" placeholder="Search Locality, Mumbai, Bangalore..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
+            <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold transition hover:bg-indigo-700">Search</button>
         </div>
     </section>
 
     <main class="container mx-auto px-6 py-12">
-        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
+        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Metro Listings</h3>
         <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
     </main>
 
     <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[400] p-4 backdrop-blur-md">
-        <div class="bg-white p-8 rounded-[2rem] w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl">
+        <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl">
             <button onclick="toggleModal('postModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 text-3xl transition">&times;</button>
-            
             <h3 class="text-3xl font-black mb-2 text-slate-900">List Your Property</h3>
             <p class="text-slate-500 mb-8 font-medium">Earn 3 coins after verification.</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2">
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">Property Title</label>
-                    <input type="text" id="title" placeholder="e.g. Spacious 2BHK near Station" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                    <input type="text" id="title" placeholder="e.g. 2BHK Near Metro Station" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="text-xs font-bold uppercase text-slate-400 ml-1">Property Type</label>
+                    <label class="text-xs font-bold uppercase text-slate-400 ml-1">Property Configuration</label>
                     <select id="bhkType" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
                         <option value="1 RK">1 RK</option>
                         <option value="1 BHK">1 BHK</option>
@@ -108,72 +107,57 @@
 
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">PIN Code</label>
-                    <input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="757001" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                    <input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
                 </div>
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">Locality / Area</label>
-                    <input type="text" id="locality" placeholder="Fetching area..." class="w-full bg-slate-100 p-4 rounded-2xl outline-none border border-transparent" readonly>
+                    <input type="text" id="locality" placeholder="Fetching area..." class="w-full bg-slate-100 p-4 rounded-2xl outline-none" readonly>
                 </div>
 
-                <div>
-                    <label class="text-xs font-bold uppercase text-slate-400 ml-1">District</label>
-                    <input type="text" id="district" class="w-full bg-slate-100 p-4 rounded-2xl outline-none" readonly>
-                </div>
-                <div>
-                    <label class="text-xs font-bold uppercase text-slate-400 ml-1">State</label>
-                    <input type="text" id="state" class="w-full bg-slate-100 p-4 rounded-2xl outline-none" readonly>
-                </div>
+                <div><input type="text" id="district" class="hidden"><input type="text" id="state" class="hidden"></div>
 
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">House No.</label>
-                    <input type="text" id="houseNo" placeholder="H.No 123" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                    <input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
                 </div>
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">Floor No.</label>
-                    <input type="text" id="floorNo" placeholder="e.g. 2nd Floor" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                    <input type="text" id="floorNo" placeholder="e.g. 15th Floor" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
                 </div>
 
                 <div class="md:col-span-2">
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">Street / Landmark</label>
-                    <input type="text" id="street" placeholder="Main Street, near Temple" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                    <input type="text" id="street" placeholder="Street name or landmark" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
                 </div>
 
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">Monthly Rent (₹)</label>
-                    <input type="number" id="rent" placeholder="5000" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                    <input type="number" id="rent" placeholder="Rent Amount" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
                 </div>
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">Owner WhatsApp No.</label>
-                    <input type="text" id="phone" placeholder="9876543210" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                    <input type="text" id="phone" placeholder="9876543210" class="w-full bg-slate-50 p-4 rounded-2xl outline-none">
                 </div>
 
                 <div class="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
                     <div class="flex flex-col gap-2">
                         <label class="text-xs font-bold uppercase text-slate-400 ml-1">Furnishing</label>
-                        <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none border border-transparent focus:border-indigo-500">
+                        <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none">
                             <option value="Unfurnished">Unfurnished</option>
                             <option value="Semi-Furnished">Semi-Furnished</option>
                             <option value="Fully Furnished">Fully Furnished</option>
                         </select>
                     </div>
-                    <div class="flex items-center gap-2 pt-6">
-                        <input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600">
-                        <label for="parking" class="text-sm font-bold text-slate-700">Parking</label>
-                    </div>
-                    <div class="flex items-center gap-2 pt-6">
-                        <input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600">
-                        <label for="water" class="text-sm font-bold text-slate-700">24hr Water</label>
-                    </div>
+                    <div class="flex items-center gap-2 pt-6"><input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Parking</label></div>
+                    <div class="flex items-center gap-2 pt-6"><input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">24h Water</label></div>
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="text-xs font-bold uppercase text-slate-400 ml-1">Property Photos</label>
+                    <label class="text-xs font-bold uppercase text-slate-400 ml-1">Photos</label>
                     <input type="file" id="multiImages" multiple class="w-full text-sm text-slate-500 mt-2">
                 </div>
 
-                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold shadow-xl hover:bg-indigo-700 transition transform hover:scale-[1.01]">
-                    List Property & Earn 3 Coins
-                </button>
+                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold shadow-xl hover:bg-indigo-700 transition transform hover:scale-[1.01]">List Property & Earn 3 Coins</button>
             </div>
         </div>
     </div>
@@ -189,8 +173,8 @@
     </div>
 
     <div id="authModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[200] p-4 backdrop-blur-md">
-        <div class="bg-white p-10 rounded-[2.5rem] w-full max-w-md relative shadow-2xl">
-            <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl">&times;</button>
+        <div class="bg-white p-10 rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
+            <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl transition hover:text-rose-500">&times;</button>
             <h3 id="authTitle" class="text-3xl font-black mb-6 text-slate-900">Join RentConnect</h3>
             <div class="space-y-4">
                 <div id="nameFields" class="grid grid-cols-2 gap-4">
@@ -200,15 +184,15 @@
                 <input type="email" id="authEmail" placeholder="Email Address" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="text" id="authPhone" placeholder="WhatsApp No." class="w-full bg-slate-50 p-4 rounded-xl outline-none">
                 <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg">Continue</button>
+                <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg transition hover:bg-indigo-700">Continue</button>
                 <p class="text-center text-sm mt-4"><button onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline transition">Switch Login/Signup</button></p>
             </div>
         </div>
     </div>
 
-    <footer class="py-10 text-center border-t border-slate-200 mt-20">
-        <p class="text-slate-400 text-xs">© 2026 Soul Shift Media | Baripada, Odisha</p>
-        <a href="admin.html" class="text-slate-200 hover:text-indigo-400 transition mt-2 text-[10px] inline-block">Admin Center</a>
+    <footer class="py-12 text-center border-t border-slate-200 mt-20">
+        <p class="text-slate-400 text-xs font-medium">© 2026 Soul Shift Media | Mumbai · Bangalore · Chennai</p>
+        <a href="admin.html" class="text-slate-200 hover:text-indigo-400 transition mt-3 text-[10px] inline-block font-bold">Admin Center</a>
     </footer>
 
     <script>
@@ -222,7 +206,7 @@
         
         function handlePostPropertyClick() {
             const userEmail = localStorage.getItem('userEmail');
-            if(!userEmail) { alert("Please Sign In first to list a property."); toggleModal('authModal'); } else { toggleModal('postModal'); }
+            if(!userEmail) { toggleModal('authModal'); } else { toggleModal('postModal'); }
         }
 
         async function requestCoinCredit() {
@@ -230,10 +214,9 @@
             fetch("https://formspree.io/f/xojnwzlg", {
                 method: "POST",
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject: "UPI VERIFICATION", message: `User ${email} claims ₹299 paid.` })
+                body: JSON.stringify({ subject: "UPI VERIFICATION", message: `User ${email} claims payment done.` })
             });
-            alert("Request sent! Admin will verify and add coins shortly.");
-            toggleModal('buyCoinsModal');
+            alert("Request sent! Verification shortly."); toggleModal('buyCoinsModal');
         }
 
         async function autoFillLocation(pin) {
@@ -262,9 +245,8 @@
         }
 
         async function submitProperty() {
-            const email = localStorage.getItem('userEmail');
             const formData = new FormData();
-            formData.append('ownerEmail', email);
+            formData.append('ownerEmail', localStorage.getItem('userEmail'));
             formData.append('title', document.getElementById('title').value);
             formData.append('bhkType', document.getElementById('bhkType').value);
             formData.append('locality', document.getElementById('locality').value);
@@ -324,7 +306,7 @@
                         <div class="relative cursor-pointer group" onclick="openGallery('${imgsData}')">
                             <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition shadow-inner">
                             <div class="absolute bottom-6 right-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md"><i class="fas fa-camera mr-1"></i> ${p.images.length} Photos</div>
-                            <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black shadow-lg uppercase tracking-wider border border-indigo-100">${p.bhkType}</div>
+                            <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black shadow-lg border border-indigo-100 uppercase">${p.bhkType}</div>
                             <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
                         </div>
                         <h4 class="font-bold text-lg text-slate-800 truncate">${p.title}</h4>
@@ -332,7 +314,7 @@
                         <div class="flex flex-wrap gap-2 mb-4">
                              <span class="text-[9px] bg-slate-50 px-2 py-1 rounded-full border text-slate-500 font-bold">${p.furnishing}</span>
                              ${p.parking ? '<span class="text-[9px] bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 text-emerald-600 font-bold">Parking</span>' : ''}
-                             ${p.water ? '<span class="text-[9px] bg-blue-50 px-2 py-1 rounded-full border border-blue-100 text-blue-600 font-bold">24hr Water</span>' : ''}
+                             ${p.water ? '<span class="text-[9px] bg-blue-50 px-2 py-1 rounded-full border border-blue-100 text-blue-600 font-bold">Water</span>' : ''}
                         </div>
                         <button onclick="${isUnlocked ? `window.open('https://wa.me/${p.phone}')` : `unlockContact(event, '${p.phone}', '${p._id}')`}" 
                                 class="w-full ${isUnlocked ? 'bg-green-600' : 'bg-slate-900'} text-white p-4 rounded-xl font-bold shadow-lg hover:scale-[1.01] transition">
@@ -344,18 +326,15 @@
         }
 
         async function unlockContact(e, phone, propId) {
-            let c = parseInt(localStorage.getItem('userCoins') || 0); const email = localStorage.getItem('userEmail');
+            let c = parseInt(localStorage.getItem('userCoins') || 0);
             if(c < 1) { toggleModal('buyCoinsModal'); return; }
             if(confirm("Unlock contact for 1 Coin?")) {
-                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email, amount: 1, description: "Contact Unlock", propId: propId }) });
+                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: localStorage.getItem('userEmail'), amount: 1, description: "Contact Unlock", propId }) });
                 const data = await res.json();
                 if(res.ok) {
                     localStorage.setItem('userCoins', data.newBalance);
                     localStorage.setItem('unlocked', JSON.stringify(data.unlocked));
-                    document.getElementById('userCoins').innerText = data.newBalance;
-                    const btn = e.currentTarget || e.target;
-                    btn.innerHTML = `<i class="fab fa-whatsapp"></i> ${phone}`;
-                    btn.className = "w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg";
+                    location.reload();
                 }
             }
         }

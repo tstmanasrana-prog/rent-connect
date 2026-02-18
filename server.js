@@ -18,7 +18,7 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: { folder: 'soulshift_rentals', allowed_formats: ['jpg', 'png', 'jpeg'] }
+    params: { folder: 'rentconnect_master', allowed_formats: ['jpg', 'png', 'jpeg'] }
 });
 const upload = multer({ storage: storage });
 
@@ -53,18 +53,18 @@ app.post('/api/signup', async (req, res) => {
         const newUser = new User({ ...req.body, password: hashedPassword, coins: 0 });
         await newUser.save();
         res.json({ email: newUser.email, firstName: newUser.firstName, coins: 0, unlocked: [] });
-    } catch (e) { res.status(400).json({ error: "Already exists" }); }
+    } catch (e) { res.status(400).json({ error: "Email exists" }); }
 });
 
 app.post('/api/login', async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
-    if (!user || !(await bcrypt.compare(req.body.password, user.password))) return res.status(400).json({ error: "Wrong credentials" });
+    if (!user || !(await bcrypt.compare(req.body.password, user.password))) return res.status(400).json({ error: "Wrong login" });
     res.json({ email: user.email, firstName: user.firstName, coins: user.coins, unlocked: user.unlockedProperties });
 });
 
 app.get('/api/user-sync/:email', async (req, res) => {
     const user = await User.findOne({ email: req.params.email });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ error: "Not found" });
     res.json({ coins: user.coins, unlocked: user.unlockedProperties });
 });
 
@@ -81,7 +81,7 @@ app.get('/api/properties', async (req, res) => {
 });
 
 app.get('/api/my-properties/:email', async (req, res) => {
-    const props = await Property.find({ ownerEmail: req.params.email, status: { $ne: 'unavailable' } }).sort({ _id: -1 });
+    const props = await Property.find({ ownerEmail: req.params.email, status: { $ne: 'unavailable' } });
     res.json(props);
 });
 
@@ -98,7 +98,7 @@ app.post('/api/spend-coin', async (req, res) => {
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
-// ADMIN ROUTES
+// ADMIN ENGINE
 app.get('/api/admin/pending', async (req, res) => {
     const pending = await Property.find({ status: 'pending' });
     res.json(pending);
@@ -132,5 +132,5 @@ app.get('/api/transactions/:email', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log("Server Running"));
+app.listen(PORT, '0.0.0.0', () => console.log("Metro Engine Ready"));
 mongoose.connect(process.env.MONGODB_URI);
