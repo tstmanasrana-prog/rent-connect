@@ -30,7 +30,6 @@
                 <h3 class="text-xl font-bold mb-6">My Properties</h3>
                 <div id="my-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
-
             <div>
                 <h3 class="text-xl font-bold mb-6 text-slate-800">Coin Activity</h3>
                 <div id="tx-list" class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4"></div>
@@ -43,7 +42,7 @@
         if(!email) window.location.href = 'index.html';
 
         async function loadDashboard() {
-            // FIXED: Sync Profile from Server (This updates the coins if Admin added them)
+            // SYNC PROFILE FROM SERVER
             try {
                 const syncRes = await fetch(`/api/user-sync/${email}`);
                 const syncData = await syncRes.json();
@@ -51,12 +50,10 @@
                     localStorage.setItem('userCoins', syncData.coins);
                     localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
                 }
-            } catch (err) {
-                console.log("Sync failed, using local data");
-            }
+            } catch(e) {}
 
-            document.getElementById('userName').innerText = localStorage.getItem('userName');
-            document.getElementById('userCoins').innerText = localStorage.getItem('userCoins');
+            document.getElementById('userName').innerText = localStorage.getItem('userName') || "User";
+            document.getElementById('userCoins').innerText = localStorage.getItem('userCoins') || "0";
 
             // Load My Properties
             const pRes = await fetch(`/api/my-properties/${email}`);
@@ -91,12 +88,19 @@
                             <p class="text-[9px] text-slate-400 font-bold">${new Date(t.date).toLocaleDateString()}</p>
                             <p class="text-xs font-bold text-slate-700">${t.description}</p>
                         </div>
-                        <p class="font-black text-sm ${isEarned ? 'text-green-600' : 'text-slate-500'}">
-                            ${isEarned ? '+' : '-'}${t.amount}
-                        </p>
+                        <p class="font-black text-sm ${isEarned ? 'text-green-600' : 'text-slate-500'}">${isEarned ? '+' : '-'}${t.amount}</p>
                     </div>
                 `);
             });
         }
 
         async function deleteProp(id) {
+            if(confirm("Mark as unavailable? This will hide it from the site.")) {
+                await fetch(`/api/properties/hide/${id}`, { method: 'PATCH' });
+                location.reload();
+            }
+        }
+        loadDashboard();
+    </script>
+</body>
+</html>

@@ -61,7 +61,7 @@ app.post('/api/login', async (req, res) => {
     res.json({ email: user.email, firstName: user.firstName, coins: user.coins, unlocked: user.unlockedProperties });
 });
 
-// FIXED: SYNC ROUTE (Allows user coins to update on refresh after admin credit)
+// SYNC ROUTE
 app.get('/api/user-sync/:email', async (req, res) => {
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -126,7 +126,7 @@ app.patch('/api/admin/verify/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// FIXED ADMIN ROUTE: ADD COINS MANUALLY
+// ADMIN: ADD COINS MANUALLY
 app.post('/api/admin/add-coins', async (req, res) => {
     const { email, amount } = req.body;
     try {

@@ -69,7 +69,7 @@
     <section class="hero-pattern text-white py-24 px-6 text-center">
         <h2 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Find your next home <br/><span class="text-indigo-300">without brokerage.</span></h2>
         <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
-            <input type="text" id="mainSearchInput" autocomplete="off" oninput="filterProperties()" placeholder="Enter Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
+            <input type="text" id="mainPropertySearch" autocomplete="off" oninput="filterProperties()" placeholder="Enter Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
             <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">Search</button>
         </div>
     </section>
@@ -146,24 +146,13 @@
         function logout() { localStorage.clear(); location.reload(); }
         function toggleAuthMode() { isSignUp = !isSignUp; document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none"; document.getElementById('authPhone').style.display = isSignUp ? "block" : "none"; }
 
-        // FIXED: ADMIN ADD COINS FUNCTION
         async function manualAddCoins() {
             const email = prompt("Enter User Email address:");
             const amount = prompt("Enter number of coins to credit (e.g. 3):");
             if(!email || !amount) return;
-
-            const res = await fetch('/api/admin/add-coins', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email, amount: parseInt(amount) })
-            });
-
+            const res = await fetch('/api/admin/add-coins', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: parseInt(amount) }) });
             const data = await res.json();
-            if(res.ok) {
-                alert(`Success! Added ${amount} coins. User real balance is now: ${data.newBalance}`);
-            } else {
-                alert("Error: " + data.error);
-            }
+            if(res.ok) { alert(`Success! Added ${amount} coins.`); location.reload(); } else { alert("Error: " + data.error); }
         }
 
         async function requestCoinCredit() {
@@ -220,7 +209,7 @@
         }
 
         function filterProperties() {
-            const term = document.getElementById('mainSearchInput').value.toLowerCase();
+            const term = document.getElementById('mainPropertySearch').value.toLowerCase();
             document.querySelectorAll('#property-list > div').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; });
         }
 
@@ -231,16 +220,18 @@
         function prevImg() { currentImgIdx = (currentImgIdx - 1 + currentPropImages.length) % currentPropImages.length; updateGalleryUI(); }
 
         async function loadData() {
-            // FIXED: Sync Coins and Unlocked list from Server on page load
+            // FIXED: Sync Profile from Server on home load
             const userEmail = localStorage.getItem('userEmail');
             if(userEmail) {
-                const syncRes = await fetch(`/api/user-sync/${userEmail}`);
-                const syncData = await syncRes.json();
-                if(syncRes.ok) {
-                    localStorage.setItem('userCoins', syncData.coins);
-                    localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
-                    document.getElementById('userCoins').innerText = syncData.coins;
-                }
+                try {
+                    const syncRes = await fetch(`/api/user-sync/${userEmail}`);
+                    const syncData = await syncRes.json();
+                    if(syncRes.ok) {
+                        localStorage.setItem('userCoins', syncData.coins);
+                        localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
+                        document.getElementById('userCoins').innerText = syncData.coins;
+                    }
+                } catch(e) {}
             }
 
             const res = await fetch('/api/properties');
