@@ -30,12 +30,9 @@ const UserSchema = new mongoose.Schema({
 });
 
 const PropertySchema = new mongoose.Schema({
-    title: String, bhkType: String, // Added BHK Type
-    rent: Number, phone: String, pincode: String,
-    locality: String, district: String, state: String,
-    houseNo: String, floorNo: String, street: String,
-    furnishing: String, parking: Boolean, water: Boolean,
-    ownerEmail: String, images: [String],
+    title: String, bhkType: String, rent: Number, phone: String, pincode: String,
+    locality: String, district: String, state: String, houseNo: String, floorNo: String, street: String,
+    furnishing: String, parking: Boolean, water: Boolean, ownerEmail: String, images: [String],
     status: { type: String, default: 'pending' },
     vacantDate: { type: String, default: 'Available Now' }
 });
@@ -49,7 +46,7 @@ const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
 const Transaction = mongoose.model('Transaction', TransactionSchema);
 
-// AUTH & SYNC
+// AUTH
 app.post('/api/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -89,55 +86,49 @@ app.get('/api/my-properties/:email', async (req, res) => {
 });
 
 app.patch('/api/properties/hide/:id', async (req, res) => {
-    try {
-        await Property.findByIdAndUpdate(req.params.id, { status: 'unavailable' });
-        res.json({ ok: true });
-    } catch (err) { res.status(500).json({ error: "Delete failed" }); }
+    await Property.findByIdAndUpdate(req.params.id, { status: 'unavailable' });
+    res.json({ ok: true });
 });
 
-app.get('/api/transactions/:email', async (req, res) => {
-    const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
-    res.json(txs);
-});
-
-// SPEND COIN
 app.post('/api/spend-coin', async (req, res) => {
     const { email, amount, description, propId } = req.body;
-    const user = await User.findOneAndUpdate(
-        { email }, 
-        { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } },
-        { new: true }
-    );
+    const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } }, { new: true });
     const tx = new Transaction({ userEmail: email, type: 'spent', amount, description });
     await tx.save();
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
-// ADMIN
+// ADMIN ROUTES
 app.get('/api/admin/pending', async (req, res) => {
     const pending = await Property.find({ status: 'pending' });
     res.json(pending);
 });
 
-app.patch('/api/admin/verify/:id', async (req, res) => {
+app.patch('/api/admin/verify-and-update/:id', async (req, res) => {
     try {
-        const property = await Property.findByIdAndUpdate(req.params.id, { status: 'verified', vacantDate: req.body.vacantDate });
-        const user = await User.findOneAndUpdate({ email: property.ownerEmail }, { $inc: { coins: 3 } }, { new: true });
-        const tx = new Transaction({ userEmail: property.ownerEmail, type: 'earned', amount: 3, description: `Verified: ${property.title}` });
+        const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body, status: 'verified' });
+        const user = await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } }, { new: true });
+        const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Verified: ${req.body.title}` });
         await tx.save();
-        res.json({ ok: true, newBalance: user.coins });
+        res.json({ ok: true });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.delete('/api/admin/delete/:id', async (req, res) => {
+    await Property.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+});
+
 app.post('/api/admin/add-coins', async (req, res) => {
-    const { email, amount } = req.body;
-    try {
-        const user = await User.findOneAndUpdate({ email }, { $inc: { coins: amount } }, { new: true });
-        if (!user) return res.status(404).json({ error: "User not found" });
-        const tx = new Transaction({ userEmail: email, type: 'earned', amount: amount, description: "Purchased Coins (UPI)" });
-        await tx.save();
-        res.json({ ok: true, newBalance: user.coins });
-    } catch (err) { res.status(500).json({ error: "Failed to add coins" }); }
+    const user = await User.findOneAndUpdate({ email: req.body.email }, { $inc: { coins: req.body.amount } }, { new: true });
+    const tx = new Transaction({ userEmail: req.body.email, type: 'earned', amount: req.body.amount, description: "Admin Topup" });
+    await tx.save();
+    res.json({ ok: true, newBalance: user.coins });
+});
+
+app.get('/api/transactions/:email', async (req, res) => {
+    const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
+    res.json(txs);
 });
 
 const PORT = process.env.PORT || 10000;

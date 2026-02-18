@@ -50,50 +50,26 @@
                     localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
                 }
             } catch(e) {}
-
             document.getElementById('userName').innerText = localStorage.getItem('userName') || "User";
             document.getElementById('userCoins').innerText = localStorage.getItem('userCoins') || "0";
-
             const pRes = await fetch(`/api/my-properties/${email}`);
             const props = await pRes.json();
             const myList = document.getElementById('my-list');
             myList.innerHTML = props.length ? '' : '<p class="text-slate-400">No properties found.</p>';
             props.forEach(p => {
                 const badge = p.status === 'verified' ? 'bg-green-500' : 'bg-amber-500';
-                myList.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm relative">
-                        <span class="absolute top-6 left-6 ${badge} text-white text-[8px] px-2 py-1 rounded-full font-bold uppercase z-10">${p.status}</span>
-                        <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4">
-                        <h4 class="font-bold text-slate-800 truncate">${p.title}</h4>
-                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-50">
-                            <p class="text-indigo-600 font-bold">₹${p.rent}</p>
-                            <button onclick="deleteProp('${p._id}')" class="text-rose-500 text-xs font-bold hover:underline">Delete</button>
-                        </div>
-                    </div>
-                `);
+                myList.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm relative"><span class="absolute top-6 left-6 ${badge} text-white text-[8px] px-2 py-1 rounded-full font-bold uppercase z-10">${p.status}</span><img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4"><h4 class="font-bold text-slate-800 truncate">${p.title}</h4><div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-50"><p class="text-indigo-600 font-bold">₹${p.rent}</p><button onclick="deleteProp('${p._id}')" class="text-rose-500 text-xs font-bold hover:underline">Delete</button></div></div>`);
             });
-
             const tRes = await fetch(`/api/transactions/${email}`);
             const txs = await tRes.json();
             const txList = document.getElementById('tx-list');
             txList.innerHTML = txs.length ? '' : '<p class="text-slate-400 text-sm">No activity yet.</p>';
             txs.forEach(t => {
                 const isEarned = t.type === 'earned';
-                txList.insertAdjacentHTML('beforeend', `
-                    <div class="flex justify-between items-center p-3 rounded-2xl ${isEarned ? 'bg-green-50' : 'bg-slate-50'}">
-                        <div class="flex-1">
-                            <p class="text-[9px] text-slate-400 font-bold">${new Date(t.date).toLocaleDateString()}</p>
-                            <p class="text-xs font-bold text-slate-700">${t.description}</p>
-                        </div>
-                        <p class="font-black text-sm ${isEarned ? 'text-green-600' : 'text-slate-500'}">${isEarned ? '+' : '-'}${t.amount}</p>
-                    </div>
-                `);
+                txList.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-3 rounded-2xl ${isEarned ? 'bg-green-50' : 'bg-slate-50'}"><div class="flex-1"><p class="text-[9px] text-slate-400 font-bold">${new Date(t.date).toLocaleDateString()}</p><p class="text-xs font-bold text-slate-700">${t.description}</p></div><p class="font-black text-sm ${isEarned ? 'text-green-600' : 'text-slate-500'}">${isEarned ? '+' : '-'}${t.amount}</p></div>`);
             });
         }
-
-        async function deleteProp(id) {
-            if(confirm("Mark as unavailable?")) { await fetch(`/api/properties/hide/${id}`, { method: 'PATCH' }); location.reload(); }
-        }
+        async function deleteProp(id) { if(confirm("Mark as unavailable?")) { await fetch(`/api/properties/hide/${id}`, { method: 'PATCH' }); location.reload(); } }
         loadDashboard();
     </script>
 </body>
