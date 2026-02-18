@@ -31,7 +31,10 @@ const UserSchema = new mongoose.Schema({
 
 const PropertySchema = new mongoose.Schema({
     title: String, rent: Number, phone: String, pincode: String,
-    locality: String, ownerEmail: String, images: [String],
+    locality: String, district: String, state: String, // Added detailed location
+    houseNo: String, floorNo: String, street: String, // Added street details
+    furnishing: String, parking: Boolean, water: Boolean, // Added amenities
+    ownerEmail: String, images: [String],
     status: { type: String, default: 'pending' },
     vacantDate: { type: String, default: 'Available Now' }
 });
@@ -61,7 +64,6 @@ app.post('/api/login', async (req, res) => {
     res.json({ email: user.email, firstName: user.firstName, coins: user.coins, unlocked: user.unlockedProperties });
 });
 
-// SYNC ROUTE
 app.get('/api/user-sync/:email', async (req, res) => {
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -110,7 +112,7 @@ app.post('/api/spend-coin', async (req, res) => {
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
-// ADMIN: VERIFY PROPERTY
+// ADMIN
 app.get('/api/admin/pending', async (req, res) => {
     const pending = await Property.find({ status: 'pending' });
     res.json(pending);
@@ -126,23 +128,12 @@ app.patch('/api/admin/verify/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ADMIN: ADD COINS MANUALLY
 app.post('/api/admin/add-coins', async (req, res) => {
     const { email, amount } = req.body;
     try {
-        const user = await User.findOneAndUpdate(
-            { email }, 
-            { $inc: { coins: amount } }, 
-            { new: true }
-        );
+        const user = await User.findOneAndUpdate({ email }, { $inc: { coins: amount } }, { new: true });
         if (!user) return res.status(404).json({ error: "User not found" });
-        
-        const tx = new Transaction({ 
-            userEmail: email, 
-            type: 'earned', 
-            amount: amount, 
-            description: "Purchased Coins (UPI)" 
-        });
+        const tx = new Transaction({ userEmail: email, type: 'earned', amount: amount, description: "Purchased Coins (UPI)" });
         await tx.save();
         res.json({ ok: true, newBalance: user.coins });
     } catch (err) { res.status(500).json({ error: "Failed to add coins" }); }

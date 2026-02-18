@@ -42,7 +42,7 @@
         if(!email) window.location.href = 'index.html';
 
         async function loadDashboard() {
-            // SYNC PROFILE FROM SERVER
+            // FIXED: Sync Profile from Server (This updates the coins if Admin added them)
             try {
                 const syncRes = await fetch(`/api/user-sync/${email}`);
                 const syncData = await syncRes.json();
@@ -50,7 +50,7 @@
                     localStorage.setItem('userCoins', syncData.coins);
                     localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
                 }
-            } catch(e) {}
+            } catch (err) { console.log("Sync failed, using local fallback"); }
 
             document.getElementById('userName').innerText = localStorage.getItem('userName') || "User";
             document.getElementById('userCoins').innerText = localStorage.getItem('userCoins') || "0";
