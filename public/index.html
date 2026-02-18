@@ -106,6 +106,18 @@
                     <input type="text" id="title" placeholder="e.g. Spacious 2BHK near Station" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
                 </div>
 
+                <div class="md:col-span-2">
+                    <label class="text-xs font-bold uppercase text-slate-400 ml-1">Property Type</label>
+                    <select id="bhkType" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
+                        <option value="1 RK">1 RK</option>
+                        <option value="1 BHK">1 BHK</option>
+                        <option value="2 BHK">2 BHK</option>
+                        <option value="3 BHK">3 BHK</option>
+                        <option value="3+ BHK">3+ BHK</option>
+                        <option value="Shop/Commercial">Shop/Commercial</option>
+                    </select>
+                </div>
+
                 <div>
                     <label class="text-xs font-bold uppercase text-slate-400 ml-1">PIN Code</label>
                     <input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="757001" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition">
@@ -220,15 +232,9 @@
         function logout() { localStorage.clear(); location.reload(); }
         function toggleAuthMode() { isSignUp = !isSignUp; document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none"; document.getElementById('authPhone').style.display = isSignUp ? "block" : "none"; }
         
-        // POINT 2: Login Wall Logic
         function handlePostPropertyClick() {
             const userEmail = localStorage.getItem('userEmail');
-            if(!userEmail) {
-                alert("Please Sign In first to list a property.");
-                toggleModal('authModal');
-            } else {
-                toggleModal('postModal');
-            }
+            if(!userEmail) { alert("Please Sign In first to list a property."); toggleModal('authModal'); } else { toggleModal('postModal'); }
         }
 
         async function manualAddCoins() {
@@ -245,13 +251,12 @@
             fetch("https://formspree.io/f/xojnwzlg", {
                 method: "POST",
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject: "UPI VERIFICATION", message: `User ${email} claims ₹299 paid. Please check bank and credit coins.` })
+                body: JSON.stringify({ subject: "UPI VERIFICATION", message: `User ${email} claims ₹299 paid. Please verify.` })
             });
             alert("Request sent! Admin will verify and add coins shortly.");
             toggleModal('buyCoinsModal');
         }
 
-        // POINT 3: Auto-fetch detailed location
         async function autoFillLocation(pin) {
             if(pin.length === 6) {
                 const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
@@ -282,6 +287,7 @@
             const formData = new FormData();
             formData.append('ownerEmail', email);
             formData.append('title', document.getElementById('title').value);
+            formData.append('bhkType', document.getElementById('bhkType').value); // BHK Logic
             formData.append('locality', document.getElementById('locality').value);
             formData.append('district', document.getElementById('district').value);
             formData.append('state', document.getElementById('state').value);
@@ -301,7 +307,7 @@
             fetch("https://formspree.io/f/xojnwzlg", {
                 method: "POST",
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject: "New Detailed Listing", message: `New: ${document.getElementById('title').value} by ${email}` })
+                body: JSON.stringify({ subject: "New Property Listing", message: `${document.getElementById('title').value} (${document.getElementById('bhkType').value}) by ${email}` })
             });
 
             await fetch('/api/properties', { method: 'POST', body: formData });
@@ -347,9 +353,10 @@
                         <div class="relative cursor-pointer group" onclick="openGallery('${imgsData}')">
                             <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition shadow-inner">
                             <div class="absolute bottom-6 right-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md"><i class="fas fa-camera mr-1"></i> ${p.images.length} Photos</div>
+                            <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black shadow-lg uppercase tracking-wider border border-indigo-100">${p.bhkType}</div>
                             <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
                         </div>
-                        <h4 class="font-bold text-lg text-slate-800">${p.title}</h4>
+                        <h4 class="font-bold text-lg text-slate-800 truncate">${p.title}</h4>
                         <div class="flex justify-between items-center mt-1 mb-4"><p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p><p class="text-slate-400 text-xs">${p.locality}</p></div>
                         <div class="flex flex-wrap gap-2 mb-4">
                              <span class="text-[9px] bg-slate-50 px-2 py-1 rounded-full border text-slate-500 font-bold">${p.furnishing}</span>
@@ -372,9 +379,14 @@
                 pending.forEach(p => {
                     pList.insertAdjacentHTML('beforeend', `
                         <div class="bg-indigo-50 p-6 rounded-[1.5rem] border border-indigo-200 mb-4 shadow-sm">
-                            <p class="font-bold text-indigo-900">${p.title} (${p.locality})</p>
-                            <p class="text-[10px] text-indigo-700">Owner: ${p.phone} | Rent: ₹${p.rent}</p>
-                            <button onclick="verifyProp('${p._id}')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg mt-4">Verify listing & Reward 3 Coins</button>
+                            <p class="font-black text-indigo-900 text-lg mb-2">${p.title} (${p.bhkType})</p>
+                            <div class="bg-white p-4 rounded-xl text-xs space-y-2 mb-4 text-slate-600 border border-indigo-100">
+                                <p><i class="fas fa-map-marker-alt w-5"></i> <b>Address:</b> ${p.houseNo}, ${p.floorNo}, ${p.street}, ${p.locality}, ${p.pincode}</p>
+                                <p><i class="fas fa-phone-alt w-5"></i> <b>Owner WhatsApp:</b> <span class="text-indigo-600 font-bold">${p.phone}</span></p>
+                                <p><i class="fas fa-money-bill-wave w-5"></i> <b>Rent:</b> ₹${p.rent}</p>
+                                <p><i class="fas fa-user w-5"></i> <b>Posted By:</b> ${p.ownerEmail}</p>
+                            </div>
+                            <button onclick="verifyProp('${p._id}')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg mt-4">Confirm Listing & Reward 3 Coins</button>
                         </div>
                     `);
                 });

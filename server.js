@@ -30,10 +30,11 @@ const UserSchema = new mongoose.Schema({
 });
 
 const PropertySchema = new mongoose.Schema({
-    title: String, rent: Number, phone: String, pincode: String,
-    locality: String, district: String, state: String, // Added detailed location
-    houseNo: String, floorNo: String, street: String, // Added street details
-    furnishing: String, parking: Boolean, water: Boolean, // Added amenities
+    title: String, bhkType: String, // Added BHK Type
+    rent: Number, phone: String, pincode: String,
+    locality: String, district: String, state: String,
+    houseNo: String, floorNo: String, street: String,
+    furnishing: String, parking: Boolean, water: Boolean,
     ownerEmail: String, images: [String],
     status: { type: String, default: 'pending' },
     vacantDate: { type: String, default: 'Available Now' }
@@ -48,7 +49,7 @@ const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
 const Transaction = mongoose.model('Transaction', TransactionSchema);
 
-// AUTH
+// AUTH & SYNC
 app.post('/api/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
