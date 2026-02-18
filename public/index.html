@@ -69,7 +69,7 @@
     <section class="hero-pattern text-white py-24 px-6 text-center">
         <h2 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Find your next home <br/><span class="text-indigo-300">without brokerage.</span></h2>
         <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
-            <input type="text" id="searchInput" oninput="filterProperties()" placeholder="Enter Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
+            <input type="text" id="mainSearchInput" autocomplete="off" oninput="filterProperties()" placeholder="Enter Locality or Pincode..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
             <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">Search</button>
         </div>
     </section>
@@ -145,8 +145,8 @@
         function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
         function logout() { localStorage.clear(); location.reload(); }
         function toggleAuthMode() { isSignUp = !isSignUp; document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none"; document.getElementById('authPhone').style.display = isSignUp ? "block" : "none"; }
-        
-        // ADMIN: ADD COINS LOGIC
+
+        // FIXED: ADMIN ADD COINS FUNCTION
         async function manualAddCoins() {
             const email = prompt("Enter User Email address:");
             const amount = prompt("Enter number of coins to credit (e.g. 3):");
@@ -160,7 +160,7 @@
 
             const data = await res.json();
             if(res.ok) {
-                alert(`Success! ${amount} coins added to ${email}. New Balance: ${data.newBalance}`);
+                alert(`Success! Added ${amount} coins. User real balance is now: ${data.newBalance}`);
             } else {
                 alert("Error: " + data.error);
             }
@@ -171,7 +171,7 @@
             fetch("https://formspree.io/f/xojnwzlg", {
                 method: "POST",
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject: "UPI PAYMENT VERIFICATION REQUEST", message: `User ${email} has claimed payment of ₹299. Please check bank and credit 3 coins via Admin Panel.` })
+                body: JSON.stringify({ subject: "UPI VERIFICATION", message: `User ${email} claims ₹299 paid. Please check bank and credit coins.` })
             });
             alert("Request sent! Admin will verify and add coins shortly.");
             toggleModal('buyCoinsModal');
@@ -199,13 +199,10 @@
         }
 
         async function submitProperty() {
-            const title = document.getElementById('title').value;
-            const locality = document.getElementById('locality').value;
-            const email = localStorage.getItem('userEmail');
             const formData = new FormData();
-            formData.append('ownerEmail', email);
-            formData.append('title', title);
-            formData.append('locality', locality);
+            formData.append('ownerEmail', localStorage.getItem('userEmail'));
+            formData.append('title', document.getElementById('title').value);
+            formData.append('locality', document.getElementById('locality').value);
             formData.append('pincode', document.getElementById('pincode').value);
             formData.append('rent', document.getElementById('rent').value);
             formData.append('phone', document.getElementById('phone').value);
@@ -215,7 +212,7 @@
             fetch("https://formspree.io/f/xojnwzlg", {
                 method: "POST",
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject: "New Property Listing", message: `New: ${title} in ${locality} by ${email}` })
+                body: JSON.stringify({ subject: "New Property Listing", message: `New: ${document.getElementById('title').value} by ${localStorage.getItem('userEmail')}` })
             });
 
             await fetch('/api/properties', { method: 'POST', body: formData });
@@ -223,7 +220,7 @@
         }
 
         function filterProperties() {
-            const term = document.getElementById('searchInput').value.toLowerCase();
+            const term = document.getElementById('mainSearchInput').value.toLowerCase();
             document.querySelectorAll('#property-list > div').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; });
         }
 
@@ -234,6 +231,18 @@
         function prevImg() { currentImgIdx = (currentImgIdx - 1 + currentPropImages.length) % currentPropImages.length; updateGalleryUI(); }
 
         async function loadData() {
+            // FIXED: Sync Coins and Unlocked list from Server on page load
+            const userEmail = localStorage.getItem('userEmail');
+            if(userEmail) {
+                const syncRes = await fetch(`/api/user-sync/${userEmail}`);
+                const syncData = await syncRes.json();
+                if(syncRes.ok) {
+                    localStorage.setItem('userCoins', syncData.coins);
+                    localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
+                    document.getElementById('userCoins').innerText = syncData.coins;
+                }
+            }
+
             const res = await fetch('/api/properties');
             const props = await res.json();
             const list = document.getElementById('property-list');
@@ -287,7 +296,7 @@
             let c = parseInt(localStorage.getItem('userCoins') || 0); const email = localStorage.getItem('userEmail');
             if(c < 1) { toggleModal('buyCoinsModal'); return; }
             if(confirm("Unlock contact for 1 Coin?")) {
-                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email, amount: 1, description: "Contact Unlock", propId }) });
+                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: email, amount: 1, description: "Contact Unlock", propId: propId }) });
                 const data = await res.json();
                 if(res.ok) {
                     localStorage.setItem('userCoins', data.newBalance);

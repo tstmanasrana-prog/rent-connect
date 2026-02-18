@@ -43,6 +43,18 @@
         if(!email) window.location.href = 'index.html';
 
         async function loadDashboard() {
+            // FIXED: Sync Profile from Server (This updates the coins if Admin added them)
+            try {
+                const syncRes = await fetch(`/api/user-sync/${email}`);
+                const syncData = await syncRes.json();
+                if(syncRes.ok) {
+                    localStorage.setItem('userCoins', syncData.coins);
+                    localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
+                }
+            } catch (err) {
+                console.log("Sync failed, using local data");
+            }
+
             document.getElementById('userName').innerText = localStorage.getItem('userName');
             document.getElementById('userCoins').innerText = localStorage.getItem('userCoins');
 
@@ -88,12 +100,3 @@
         }
 
         async function deleteProp(id) {
-            if(confirm("Mark as unavailable? This will hide it from the site.")) {
-                await fetch(`/api/properties/hide/${id}`, { method: 'PATCH' });
-                location.reload();
-            }
-        }
-        loadDashboard();
-    </script>
-</body>
-</html>
