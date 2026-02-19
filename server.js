@@ -27,28 +27,32 @@ const UserSchema = new mongoose.Schema({
     firstName: String, lastName: String, email: { type: String, unique: true },
     password: String, phone: String, coins: { type: Number, default: 0 },
     unlockedProperties: [String],
-    wishlist: [String] // Store Property IDs
+    wishlist: [String]
 });
 
 const PropertySchema = new mongoose.Schema({
     title: String, bhkType: String, rent: Number, phone: String, pincode: String,
     locality: String, district: String, state: String, houseNo: String, floorNo: String, street: String,
     furnishing: String, parking: Boolean, water: Boolean, ownerEmail: String, images: [String],
-    status: { type: String, default: 'pending' },
+    status: { type: String, default: 'pending' }, 
     vacantDate: { type: String, default: 'Available Now' },
-    likesCount: { type: Number, default: 0 } // Social Proof
+    likesCount: { type: Number, default: 0 },
+    isBrokerReported: { type: Boolean, default: false }
 });
 
-const TransactionSchema = new mongoose.Schema({
-    userEmail: String, type: String, amount: Number,
-    description: String, date: { type: Date, default: Date.now }
+const BlacklistSchema = new mongoose.Schema({
+    phone: { type: String, unique: true },
+    date: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', UserSchema);
 const Property = mongoose.model('Property', PropertySchema);
-const Transaction = mongoose.model('Transaction', TransactionSchema);
+const Blacklist = mongoose.model('Blacklist', BlacklistSchema);
+const Transaction = mongoose.model('Transaction', new mongoose.Schema({
+    userEmail: String, type: String, amount: Number, description: String, date: { type: Date, default: Date.now }
+}));
 
-// AUTH
+// AUTH & SYNC
 app.post('/api/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -70,12 +74,24 @@ app.get('/api/user-sync/:email', async (req, res) => {
     res.json({ coins: user.coins, unlocked: user.unlockedProperties, wishlist: user.wishlist });
 });
 
-// WISHLIST TOGGLE (The Heart Logic)
+// PROPERTIES & WISHLIST
+app.post('/api/properties', upload.array('images', 12), async (req, res) => {
+    const banned = await Blacklist.findOne({ phone: req.body.phone });
+    if(banned) return res.status(403).json({ error: "This number is blacklisted." });
+    const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
+    await newProp.save();
+    res.json({ ok: true });
+});
+
+app.get('/api/properties', async (req, res) => {
+    const props = await Property.find({ status: 'verified' }).sort({ _id: -1 });
+    res.json(props);
+});
+
 app.post('/api/wishlist/toggle', async (req, res) => {
     const { email, propId } = req.body;
     const user = await User.findOne({ email });
     const isLiked = user.wishlist.includes(propId);
-
     if (isLiked) {
         await User.updateOne({ email }, { $pull: { wishlist: propId } });
         await Property.findByIdAndUpdate(propId, { $inc: { likesCount: -1 } });
@@ -87,33 +103,15 @@ app.post('/api/wishlist/toggle', async (req, res) => {
     res.json({ ok: true, wishlist: updatedUser.wishlist });
 });
 
-// GET WISHLISTED PROPERTIES FOR DASHBOARD
 app.get('/api/my-wishlist/:email', async (req, res) => {
     const user = await User.findOne({ email: req.params.email });
     const props = await Property.find({ _id: { $in: user.wishlist } });
     res.json(props);
 });
 
-// PROPERTIES
-app.post('/api/properties', upload.array('images', 12), async (req, res) => {
-    const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
-    await newProp.save();
-    res.json({ ok: true });
-});
-
-app.get('/api/properties', async (req, res) => {
-    const props = await Property.find({ status: 'verified' }).sort({ _id: -1 });
-    res.json(props);
-});
-
 app.get('/api/my-properties/:email', async (req, res) => {
-    const props = await Property.find({ ownerEmail: req.params.email, status: { $ne: 'unavailable' } });
+    const props = await Property.find({ ownerEmail: req.params.email });
     res.json(props);
-});
-
-app.patch('/api/properties/hide/:id', async (req, res) => {
-    await Property.findByIdAndUpdate(req.params.id, { status: 'unavailable' });
-    res.json({ ok: true });
 });
 
 app.post('/api/spend-coin', async (req, res) => {
@@ -124,20 +122,34 @@ app.post('/api/spend-coin', async (req, res) => {
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
+app.post('/api/report-broker', async (req, res) => {
+    await Property.findByIdAndUpdate(req.body.propId, { isBrokerReported: true });
+    res.json({ ok: true });
+});
+
 // ADMIN ENGINE
 app.get('/api/admin/pending', async (req, res) => {
-    const pending = await Property.find({ status: 'pending' });
-    res.json(pending);
+    res.json(await Property.find({ status: 'pending' }));
+});
+
+app.get('/api/admin/all-properties', async (req, res) => {
+    res.json(await Property.find().sort({ _id: -1 }));
 });
 
 app.patch('/api/admin/verify-and-update/:id', async (req, res) => {
+    const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
+    if(req.body.status === 'verified' && p.status === 'verified') {
+        await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } });
+    }
+    res.json({ ok: true });
+});
+
+app.post('/api/admin/blacklist', async (req, res) => {
     try {
-        const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body, status: 'verified' });
-        const user = await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } }, { new: true });
-        const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Verified: ${req.body.title}` });
-        await tx.save();
+        await new Blacklist({ phone: req.body.phone }).save();
+        await Property.updateMany({ phone: req.body.phone }, { status: 'unavailable' });
         res.json({ ok: true });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (e) { res.status(400).json({ error: "Already banned" }); }
 });
 
 app.delete('/api/admin/delete/:id', async (req, res) => {
@@ -147,16 +159,9 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
 
 app.post('/api/admin/add-coins', async (req, res) => {
     const user = await User.findOneAndUpdate({ email: req.body.email }, { $inc: { coins: req.body.amount } }, { new: true });
-    const tx = new Transaction({ userEmail: req.body.email, type: 'earned', amount: req.body.amount, description: "Admin Topup" });
-    await tx.save();
     res.json({ ok: true, newBalance: user.coins });
 });
 
-app.get('/api/transactions/:email', async (req, res) => {
-    const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
-    res.json(txs);
-});
-
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log("Social Engine Ready"));
+app.listen(PORT, '0.0.0.0', () => console.log("Engine Running"));
 mongoose.connect(process.env.MONGODB_URI);
