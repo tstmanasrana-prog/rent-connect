@@ -26,7 +26,8 @@ const upload = multer({ storage: storage });
 const UserSchema = new mongoose.Schema({
     firstName: String, lastName: String, email: { type: String, unique: true },
     password: String, phone: String, coins: { type: Number, default: 0 },
-    unlockedProperties: [String] 
+    unlockedProperties: [String],
+    wishlist: [String] // Store Property IDs
 });
 
 const PropertySchema = new mongoose.Schema({
@@ -34,7 +35,8 @@ const PropertySchema = new mongoose.Schema({
     locality: String, district: String, state: String, houseNo: String, floorNo: String, street: String,
     furnishing: String, parking: Boolean, water: Boolean, ownerEmail: String, images: [String],
     status: { type: String, default: 'pending' },
-    vacantDate: { type: String, default: 'Available Now' }
+    vacantDate: { type: String, default: 'Available Now' },
+    likesCount: { type: Number, default: 0 } // Social Proof
 });
 
 const TransactionSchema = new mongoose.Schema({
@@ -52,20 +54,44 @@ app.post('/api/signup', async (req, res) => {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         const newUser = new User({ ...req.body, password: hashedPassword, coins: 0 });
         await newUser.save();
-        res.json({ email: newUser.email, firstName: newUser.firstName, coins: 0, unlocked: [] });
+        res.json({ email: newUser.email, firstName: newUser.firstName, coins: 0, unlocked: [], wishlist: [] });
     } catch (e) { res.status(400).json({ error: "Email exists" }); }
 });
 
 app.post('/api/login', async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user || !(await bcrypt.compare(req.body.password, user.password))) return res.status(400).json({ error: "Wrong login" });
-    res.json({ email: user.email, firstName: user.firstName, coins: user.coins, unlocked: user.unlockedProperties });
+    res.json({ email: user.email, firstName: user.firstName, coins: user.coins, unlocked: user.unlockedProperties, wishlist: user.wishlist });
 });
 
 app.get('/api/user-sync/:email', async (req, res) => {
     const user = await User.findOne({ email: req.params.email });
     if (!user) return res.status(404).json({ error: "Not found" });
-    res.json({ coins: user.coins, unlocked: user.unlockedProperties });
+    res.json({ coins: user.coins, unlocked: user.unlockedProperties, wishlist: user.wishlist });
+});
+
+// WISHLIST TOGGLE (The Heart Logic)
+app.post('/api/wishlist/toggle', async (req, res) => {
+    const { email, propId } = req.body;
+    const user = await User.findOne({ email });
+    const isLiked = user.wishlist.includes(propId);
+
+    if (isLiked) {
+        await User.updateOne({ email }, { $pull: { wishlist: propId } });
+        await Property.findByIdAndUpdate(propId, { $inc: { likesCount: -1 } });
+    } else {
+        await User.updateOne({ email }, { $addToSet: { wishlist: propId } });
+        await Property.findByIdAndUpdate(propId, { $inc: { likesCount: 1 } });
+    }
+    const updatedUser = await User.findOne({ email });
+    res.json({ ok: true, wishlist: updatedUser.wishlist });
+});
+
+// GET WISHLISTED PROPERTIES FOR DASHBOARD
+app.get('/api/my-wishlist/:email', async (req, res) => {
+    const user = await User.findOne({ email: req.params.email });
+    const props = await Property.find({ _id: { $in: user.wishlist } });
+    res.json(props);
 });
 
 // PROPERTIES
@@ -132,5 +158,5 @@ app.get('/api/transactions/:email', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log("Metro Engine Ready"));
+app.listen(PORT, '0.0.0.0', () => console.log("Social Engine Ready"));
 mongoose.connect(process.env.MONGODB_URI);

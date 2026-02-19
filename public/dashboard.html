@@ -13,11 +13,8 @@
     <nav class="bg-white border-b px-6 py-4 sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <a href="index.html" class="text-xl font-extrabold text-slate-900"><i class="fas fa-arrow-left mr-2 text-indigo-600"></i> Back to Home</a>
-            <div class="flex items-center gap-4">
-                <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2">
-                    <i class="fas fa-coins text-amber-500"></i>
-                    <span id="userCoins" class="font-bold text-amber-700">0</span>
-                </div>
+            <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2">
+                <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700">0</span>
             </div>
         </div>
     </nav>
@@ -25,14 +22,21 @@
     <main class="container mx-auto px-6 py-12 max-w-6xl">
         <h2 class="text-3xl font-black text-slate-900 mb-10">Welcome, <span id="userName" class="text-indigo-600">User</span>!</h2>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div class="lg:col-span-2">
-                <h3 class="text-xl font-bold mb-6">My Properties</h3>
-                <div id="my-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-            </div>
+        <div class="space-y-12">
             <div>
-                <h3 class="text-xl font-bold mb-6 text-slate-800">Coin Activity</h3>
-                <div id="tx-list" class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4"></div>
+                <h3 class="text-2xl font-bold mb-6 flex items-center gap-2"><i class="fas fa-heart text-rose-500"></i> My Saved Properties</h3>
+                <div id="wish-list" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div class="lg:col-span-2">
+                    <h3 class="text-xl font-bold mb-6">My Posted Properties</h3>
+                    <div id="my-list" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-6 text-slate-800">Coin Activity</h3>
+                    <div id="tx-list" class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -48,18 +52,38 @@
                 if(syncRes.ok) {
                     localStorage.setItem('userCoins', syncData.coins);
                     localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
+                    localStorage.setItem('wishlist', JSON.stringify(syncData.wishlist));
                 }
             } catch(e) {}
+            
             document.getElementById('userName').innerText = localStorage.getItem('userName') || "User";
             document.getElementById('userCoins').innerText = localStorage.getItem('userCoins') || "0";
+
+            // Load Wishlist
+            const wRes = await fetch(`/api/my-wishlist/${email}`);
+            const wishes = await wRes.json();
+            const wishList = document.getElementById('wish-list');
+            wishList.innerHTML = wishes.length ? '' : '<p class="text-slate-400 text-sm italic col-span-3">No saved properties yet. Start hearting!</p>';
+            wishes.forEach(p => {
+                wishList.insertAdjacentHTML('beforeend', `
+                    <div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm relative group">
+                        <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4">
+                        <h4 class="font-bold text-slate-800 truncate">${p.title}</h4>
+                        <div class="flex justify-between mt-2"><p class="text-indigo-600 font-bold">₹${p.rent}</p><a href="index.html" class="text-indigo-400 text-xs font-bold hover:underline">View on Map</a></div>
+                    </div>
+                `);
+            });
+
+            // Load My Posted Properties
             const pRes = await fetch(`/api/my-properties/${email}`);
             const props = await pRes.json();
             const myList = document.getElementById('my-list');
             myList.innerHTML = props.length ? '' : '<p class="text-slate-400">No properties found.</p>';
             props.forEach(p => {
-                const badge = p.status === 'verified' ? 'bg-green-500' : 'bg-amber-500';
-                myList.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm relative"><span class="absolute top-6 left-6 ${badge} text-white text-[8px] px-2 py-1 rounded-full font-bold uppercase z-10">${p.status}</span><img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4"><h4 class="font-bold text-slate-800 truncate">${p.title}</h4><div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-50"><p class="text-indigo-600 font-bold">₹${p.rent}</p><button onclick="deleteProp('${p._id}')" class="text-rose-500 text-xs font-bold hover:underline">Delete</button></div></div>`);
+                myList.insertAdjacentHTML('beforeend', `<div class="bg-white rounded-3xl border border-slate-100 p-4 shadow-sm relative"><span class="absolute top-6 left-6 ${p.status==='verified'?'bg-green-500':'bg-amber-500'} text-white text-[8px] px-2 py-1 rounded-full font-bold uppercase z-10">${p.status}</span><img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4"><h4 class="font-bold text-slate-800 truncate">${p.title}</h4><div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-50"><p class="text-indigo-600 font-bold">₹${p.rent}</p><button onclick="deleteProp('${p._id}')" class="text-rose-500 text-xs font-bold hover:underline">Delete</button></div></div>`);
             });
+
+            // Load Transactions
             const tRes = await fetch(`/api/transactions/${email}`);
             const txs = await tRes.json();
             const txList = document.getElementById('tx-list');
@@ -69,6 +93,7 @@
                 txList.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-3 rounded-2xl ${isEarned ? 'bg-green-50' : 'bg-slate-50'}"><div class="flex-1"><p class="text-[9px] text-slate-400 font-bold">${new Date(t.date).toLocaleDateString()}</p><p class="text-xs font-bold text-slate-700">${t.description}</p></div><p class="font-black text-sm ${isEarned ? 'text-green-600' : 'text-slate-500'}">${isEarned ? '+' : '-'}${t.amount}</p></div>`);
             });
         }
+
         async function deleteProp(id) { if(confirm("Mark as unavailable?")) { await fetch(`/api/properties/hide/${id}`, { method: 'PATCH' }); location.reload(); } }
         loadDashboard();
     </script>
