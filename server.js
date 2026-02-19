@@ -52,7 +52,7 @@ const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     userEmail: String, type: String, amount: Number, description: String, date: { type: Date, default: Date.now }
 }));
 
-// AUTH
+// AUTH & SYNC
 app.post('/api/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -88,7 +88,20 @@ app.get('/api/properties', async (req, res) => {
     res.json(props);
 });
 
-// SOCIAL FEATURES
+app.get('/api/my-properties/:email', async (req, res) => {
+    const props = await Property.find({ ownerEmail: req.params.email });
+    res.json(props);
+});
+
+app.post('/api/spend-coin', async (req, res) => {
+    const { email, amount, description, propId } = req.body;
+    const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } }, { new: true });
+    const tx = new Transaction({ userEmail: email, type: 'spent', amount, description });
+    await tx.save();
+    res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
+});
+
+// WISHLIST
 app.post('/api/wishlist/toggle', async (req, res) => {
     const { email, propId } = req.body;
     const user = await User.findOne({ email });
@@ -110,25 +123,12 @@ app.get('/api/my-wishlist/:email', async (req, res) => {
     res.json(props);
 });
 
-app.get('/api/my-properties/:email', async (req, res) => {
-    const props = await Property.find({ ownerEmail: req.params.email });
-    res.json(props);
-});
-
-app.post('/api/spend-coin', async (req, res) => {
-    const { email, amount, description, propId } = req.body;
-    const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } }, { new: true });
-    const tx = new Transaction({ userEmail: email, type: 'spent', amount, description });
-    await tx.save();
-    res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
-});
-
 app.post('/api/report-broker', async (req, res) => {
     await Property.findByIdAndUpdate(req.body.propId, { isBrokerReported: true });
     res.json({ ok: true });
 });
 
-// ADMIN
+// ADMIN ENGINE
 app.get('/api/admin/pending', async (req, res) => {
     res.json(await Property.find({ status: 'pending' }));
 });
@@ -140,9 +140,11 @@ app.get('/api/admin/all-properties', async (req, res) => {
 app.patch('/api/admin/verify-and-update/:id', async (req, res) => {
     const oldProp = await Property.findById(req.params.id);
     const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
+    
+    // Reward only if moving from pending to verified for the first time
     if(req.body.status === 'verified' && oldProp.status === 'pending') {
         await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } });
-        const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Reward: ${p.title}` });
+        const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Verified: ${p.title}` });
         await tx.save();
     }
     res.json({ ok: true });
@@ -163,8 +165,6 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
 
 app.post('/api/admin/add-coins', async (req, res) => {
     const user = await User.findOneAndUpdate({ email: req.body.email }, { $inc: { coins: req.body.amount } }, { new: true });
-    const tx = new Transaction({ userEmail: req.body.email, type: 'earned', amount: req.body.amount, description: "Admin Topup" });
-    await tx.save();
     res.json({ ok: true, newBalance: user.coins });
 });
 
@@ -174,5 +174,5 @@ app.get('/api/transactions/:email', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log("Metro Engine Ready"));
+app.listen(PORT, '0.0.0.0', () => console.log("Engine Running"));
 mongoose.connect(process.env.MONGODB_URI);

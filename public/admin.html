@@ -7,25 +7,35 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .status-verified { border-left: 8px solid #22c55e; background: rgba(34, 197, 94, 0.05); }
+        .status-rented { border-left: 8px solid #f59e0b; background: rgba(245, 158, 11, 0.05); }
+        .status-pending { border-left: 8px solid #6366f1; background: rgba(99, 102, 241, 0.05); }
+        .status-reported { border: 2px solid #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
+    </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
     <div id="lockScreen" class="fixed inset-0 bg-slate-900 z-[1000] flex flex-col justify-center items-center p-6 text-center">
         <h2 class="text-3xl font-black mb-8">Admin Center</h2>
         <input type="password" id="adminPass" placeholder="Password" class="bg-slate-800 border border-slate-700 p-5 rounded-2xl outline-none mb-6 w-full max-w-xs text-center">
-        <button onclick="checkAdmin()" class="bg-indigo-600 px-12 py-4 rounded-2xl font-bold">Login</button>
+        <button onclick="checkAdmin()" class="bg-indigo-600 px-12 py-4 rounded-2xl font-bold hover:bg-indigo-500 transition">Login</button>
     </div>
 
     <div id="adminContent" class="hidden">
         <nav class="border-b border-slate-800 p-6 flex justify-between items-center bg-slate-900 sticky top-0 z-50">
             <h1 class="text-xl font-black text-indigo-400">RentConnect Admin</h1>
             <div class="flex gap-4">
-                <button onclick="loadPending()" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">Pending Queue</button>
-                <button onclick="loadAll()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold">Manage All Listings</button>
-                <button onclick="manualAddCoins()" class="text-slate-400 text-xs font-bold ml-4">Topup User</button>
+                <button onclick="loadPending()" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider">Queue</button>
+                <button onclick="loadAll()" class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider">Inventory</button>
+                <button onclick="manualAddCoins()" class="text-slate-400 text-xs font-bold">Topup</button>
             </div>
         </nav>
-        <main class="container mx-auto p-6 max-w-6xl"><div id="pendingList" class="space-y-8 mt-6"></div></main>
+
+        <main class="container mx-auto p-6 max-w-6xl">
+            <div id="statusHeader" class="mb-10 mt-6"></div>
+            <div id="mainList" class="space-y-6"></div>
+        </main>
     </div>
 
     <script>
@@ -34,17 +44,24 @@
         async function loadPending() {
             const res = await fetch('/api/admin/pending');
             const data = await res.json();
-            document.getElementById('pendingList').innerHTML = data.map(p => `
-                <div class="bg-slate-800 border border-slate-700 rounded-[2.5rem] p-10 shadow-2xl">
+            document.getElementById('statusHeader').innerHTML = `<h2 class="text-3xl font-black">Verification Queue (${data.length})</h2>`;
+            const list = document.getElementById('mainList');
+            list.innerHTML = data.map(p => `
+                <div class="bg-slate-800 rounded-[2.5rem] p-8 shadow-2xl status-pending">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        <div><div class="grid grid-cols-3 gap-2">${p.images.map(img => `<img src="${img}" class="rounded-xl aspect-square object-cover" onclick="window.open('${img}')">`).join('')}</div></div>
+                        <div><div class="grid grid-cols-3 gap-2">${p.images.map(img => `<img src="${img}" class="rounded-xl aspect-square object-cover cursor-pointer" onclick="window.open('${img}')">`).join('')}</div></div>
                         <div class="space-y-4">
                             <input type="text" id="title-${p._id}" value="${p.title}" class="bg-slate-700 w-full p-4 rounded-2xl text-sm font-bold border-none outline-none">
-                            <div class="bg-white rounded-2xl p-4 text-slate-900"><p class="text-[10px] font-black text-indigo-600">Owner Phone</p><input type="text" id="phone-${p._id}" value="${p.phone}" class="text-xl font-black w-full outline-none"></div>
-                            <div class="grid grid-cols-3 gap-2">
-                                <input type="text" id="houseNo-${p._id}" value="${p.houseNo}" class="bg-slate-700 p-3 rounded-xl text-xs"><input type="text" id="floorNo-${p._id}" value="${p.floorNo}" class="bg-slate-700 p-3 rounded-xl text-xs"><input type="text" id="rent-${p._id}" value="${p.rent}" class="bg-slate-700 p-3 rounded-xl text-xs">
+                            <div class="bg-white rounded-2xl p-4 text-slate-900">
+                                <p class="text-[10px] font-black uppercase text-indigo-600">Landlord Phone</p>
+                                <input type="text" id="phone-${p._id}" value="${p.phone}" class="text-xl font-black w-full outline-none">
                             </div>
-                            <button onclick="verifyAndSave('${p._id}')" class="w-full bg-indigo-600 py-4 rounded-2xl font-black">Approve & Pay 3 Coins</button>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input type="text" id="houseNo-${p._id}" value="${p.houseNo || ''}" placeholder="House" class="bg-slate-700 p-3 rounded-xl text-xs">
+                                <input type="text" id="floorNo-${p._id}" value="${p.floorNo || ''}" placeholder="Floor" class="bg-slate-700 p-3 rounded-xl text-xs">
+                                <input type="text" id="rent-${p._id}" value="${p.rent}" placeholder="Rent" class="bg-slate-700 p-3 rounded-xl text-xs">
+                            </div>
+                            <button onclick="verifyAndSave('${p._id}')" class="w-full bg-indigo-600 py-4 rounded-2xl font-black hover:bg-indigo-500 transition">Approve & Pay 3 Coins</button>
                         </div>
                     </div>
                 </div>
@@ -54,25 +71,44 @@
         async function loadAll() {
             const res = await fetch('/api/admin/all-properties');
             const data = await res.json();
-            document.getElementById('pendingList').innerHTML = `<h2 class="text-2xl font-bold mb-8 uppercase tracking-widest">Global Management</h2>` + data.map(p => `
-                <div class="bg-slate-800 p-6 rounded-3xl border ${p.isBrokerReported ? 'border-rose-500 bg-rose-500/5' : 'border-slate-700'} mb-4 flex justify-between items-center">
-                    <div><p class="font-bold">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500">[REPORTED]</span>' : ''}</p><p class="text-indigo-400 text-sm">${p.phone} (${p.status})</p></div>
-                    <div class="flex gap-2">
-                        <button onclick="toggleStatus('${p._id}', '${p.status==='verified'?'rented':'verified'}')" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold uppercase">Toggle Status</button>
-                        <button onclick="blacklistNumber('${p.phone}')" class="bg-rose-600 px-4 py-2 rounded-xl text-xs font-bold uppercase">Ban Number</button>
+            document.getElementById('statusHeader').innerHTML = `<h2 class="text-3xl font-black">All Listings (${data.length})</h2>`;
+            const list = document.getElementById('mainList');
+            list.innerHTML = data.map(p => {
+                const statusClass = p.isBrokerReported ? 'status-reported' : `status-${p.status}`;
+                const statusColor = p.status === 'verified' ? 'text-green-400' : 'text-amber-400';
+                
+                return `
+                    <div class="bg-slate-800 p-6 rounded-3xl mb-4 flex flex-col md:flex-row justify-between items-center gap-4 ${statusClass}">
+                        <div class="flex items-center gap-4">
+                            <img src="${p.images[0]}" class="w-16 h-16 rounded-xl object-cover">
+                            <div>
+                                <p class="font-bold text-lg">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500 font-black text-xs ml-2">[REPORTED]</span>' : ''}</p>
+                                <p class="text-sm uppercase font-black ${statusColor}">${p.status}</p>
+                                <p class="text-slate-500 text-xs">${p.phone} • ${p.locality}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="toggleStatus('${p._id}', '${p.status==='verified'?'rented':'verified'}')" 
+                                    class="flex-1 md:flex-none px-6 py-3 rounded-xl text-xs font-bold uppercase transition ${p.status==='verified'?'bg-amber-600 hover:bg-amber-500':'bg-green-600 hover:bg-green-500'}">
+                                Mark ${p.status==='verified'?'Rented':'Available'}
+                            </button>
+                            <button onclick="blacklistNumber('${p.phone}')" class="px-6 py-3 rounded-xl text-xs font-bold uppercase bg-rose-600 hover:bg-rose-500 transition">Ban Broker</button>
+                            <button onclick="deleteProp('${p._id}')" class="p-3 rounded-xl bg-slate-700 hover:bg-rose-900 transition"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         async function verifyAndSave(id) {
             const body = { title: document.getElementById(`title-${id}`).value, phone: document.getElementById(`phone-${id}`).value, houseNo: document.getElementById(`houseNo-${id}`).value, floorNo: document.getElementById(`floorNo-${id}`).value, rent: document.getElementById(`rent-${id}`).value, status: 'verified' };
             await fetch(`/api/admin/verify-and-update/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-            alert("Live!"); loadPending();
+            alert("Verified!"); loadPending();
         }
 
         async function toggleStatus(id, s) { await fetch(`/api/admin/verify-and-update/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: s }) }); loadAll(); }
-        async function blacklistNumber(phone) { if(confirm("Ban this number?")) { await fetch('/api/admin/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone }) }); alert("Banned."); loadAll(); } }
+        async function blacklistNumber(phone) { if(confirm("Permanently ban this broker and hide their listings?")) { await fetch('/api/admin/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone }) }); loadAll(); } }
+        async function deleteProp(id) { if(confirm("Delete forever?")) { await fetch(`/api/admin/delete/${id}`, { method: 'DELETE' }); loadAll(); } }
         async function manualAddCoins() { const email = prompt("Email:"); const amount = prompt("Coins:"); if(email && amount) await fetch('/api/admin/add-coins', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: parseInt(amount) }) }); }
     </script>
 </body>
