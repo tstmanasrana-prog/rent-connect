@@ -44,7 +44,7 @@
         <div class="bg-white p-10 rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
             <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl transition hover:text-rose-500">&times;</button>
             <h3 id="authTitle" class="text-3xl font-black mb-6 text-slate-900">Join RentConnect</h3>
-            <div class="space-y-4">
+            <div class="space-y-4 text-left">
                 <div id="nameFields" class="grid grid-cols-2 gap-4">
                     <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
                     <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-4 rounded-xl outline-none">
@@ -136,7 +136,7 @@
         async function reportBroker(propId) {
             if(confirm("Report as broker? Admin will verify.")) {
                 await fetch('/api/report-broker', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ propId }) });
-                alert("Reported.");
+                alert("Reported. We will investigate.");
             }
         }
 
@@ -172,6 +172,8 @@
             formData.append('title', document.getElementById('title').value);
             formData.append('bhkType', document.getElementById('bhkType').value);
             formData.append('locality', document.getElementById('locality').value);
+            formData.append('district', document.getElementById('district').value);
+            formData.append('state', document.getElementById('state').value);
             formData.append('pincode', document.getElementById('pincode').value);
             formData.append('houseNo', document.getElementById('houseNo').value);
             formData.append('floorNo', document.getElementById('floorNo').value);
@@ -183,14 +185,18 @@
             formData.append('water', document.getElementById('water').checked);
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
+            
             const res = await fetch('/api/properties', { method: 'POST', body: formData });
-            if(res.ok) { alert("Sent for verification!"); location.reload(); }
+            const data = await res.json();
+            // Point 1: Display polite failure notification
+            if(res.ok) { alert("Listing sent for verification!"); location.reload(); } 
+            else { alert(data.error); }
         }
 
         async function unlockContact(e, phone, propId) {
             const email = localStorage.getItem('userEmail');
             if(!email) { toggleModal('authModal'); return; }
-            if(parseInt(localStorage.getItem('userCoins')) < 1) { toggleModal('buyCoinsModal'); return; }
+            if(parseInt(localStorage.getItem('userCoins')) < 1) { alert("You need at least 1 coin to unlock."); return; }
             if(confirm("Unlock contact for 1 Coin?")) {
                 const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: 1, description: "Contact Unlock", propId }) });
                 if(res.ok) location.reload();
@@ -237,17 +243,23 @@
                 const isWishlisted = wishlist.includes(p._id);
                 const imgsData = encodeURIComponent(JSON.stringify(p.images));
 
+                // Point 2: Heart Button moved to Right-Bottom of image area
                 list.insertAdjacentHTML('beforeend', `
                     <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4 relative">
-                        <button onclick="toggleWishlist('${p._id}')" class="heart-btn absolute top-6 left-6 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg">
-                            <i class="${isWishlisted ? 'fas' : 'far'} fa-heart text-${isWishlisted ? 'rose-500' : 'slate-400'}"></i>
-                        </button>
-                        <div onclick="openGallery('${imgsData}')" class="cursor-pointer group">
+                        <div onclick="openGallery('${imgsData}')" class="relative cursor-pointer group">
                             <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition shadow-inner">
-                            <div class="absolute bottom-6 right-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md"><i class="fas fa-camera mr-1"></i> ${p.images.length} Photos</div>
-                            <div class="absolute top-3 left-10 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black shadow-lg border border-indigo-100 uppercase ml-4">${p.bhkType}</div>
+                            
+                            <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black shadow-lg border border-indigo-100 uppercase">${p.bhkType}</div>
+                            
                             <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
+                            
+                            <div class="absolute bottom-6 left-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md"><i class="fas fa-camera mr-1"></i> ${p.images.length} Photos</div>
+                            
+                            <button onclick="event.stopPropagation(); toggleWishlist('${p._id}')" class="heart-btn absolute bottom-6 right-3 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:scale-110">
+                                <i class="${isWishlisted ? 'fas' : 'far'} fa-heart text-${isWishlisted ? 'rose-500' : 'slate-400'}"></i>
+                            </button>
                         </div>
+                        
                         <h4 class="font-bold text-lg text-slate-800 truncate">${p.title}</h4>
                         <div class="flex justify-between items-center mt-1 mb-2"><p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p><p class="text-slate-400 text-xs">${p.locality}</p></div>
                         <p class="text-[10px] text-slate-400 font-bold mb-4"><i class="fas fa-heart text-rose-400 mr-1"></i> ${p.likesCount || 0} interested</p>
