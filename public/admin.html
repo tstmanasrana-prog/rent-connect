@@ -71,7 +71,7 @@
         async function loadAll() {
             const res = await fetch('/api/admin/all-properties');
             const data = await res.json();
-            document.getElementById('statusHeader').innerHTML = `<h2 class="text-3xl font-black">All Listings (${data.length})</h2>`;
+            document.getElementById('statusHeader').innerHTML = `<h2 class="text-3xl font-black">Inventory Control (${data.length})</h2>`;
             const list = document.getElementById('mainList');
             list.innerHTML = data.map(p => {
                 const statusClass = p.isBrokerReported ? 'status-reported' : `status-${p.status}`;
@@ -82,7 +82,7 @@
                         <div class="flex items-center gap-4">
                             <img src="${p.images[0]}" class="w-16 h-16 rounded-xl object-cover">
                             <div>
-                                <p class="font-bold text-lg">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500 font-black text-xs ml-2">[REPORTED]</span>' : ''}</p>
+                                <p class="font-bold text-lg text-white">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500 font-black text-xs ml-2">[REPORTED]</span>' : ''}</p>
                                 <p class="text-sm uppercase font-black ${statusColor}">${p.status}</p>
                                 <p class="text-slate-500 text-xs">${p.phone} • ${p.locality}</p>
                             </div>
@@ -101,14 +101,15 @@
         }
 
         async function verifyAndSave(id) {
-            const body = { title: document.getElementById(`title-${id}`).value, phone: document.getElementById(`phone-${id}`).value, houseNo: document.getElementById(`houseNo-${id}`).value, floorNo: document.getElementById(`floorNo-${id}`).value, rent: document.getElementById(`rent-${id}`).value, status: 'verified' };
-            await fetch(`/api/admin/verify-and-update/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-            alert("Verified!"); loadPending();
+            const date = prompt("Vacant From?", "Available Now"); if(!date) return;
+            const updatedData = { title: document.getElementById(`title-${id}`).value, phone: document.getElementById(`phone-${id}`).value, houseNo: document.getElementById(`houseNo-${id}`).value, floorNo: document.getElementById(`floorNo-${id}`).value, rent: document.getElementById(`rent-${id}`).value, vacantDate: date, status: 'verified' };
+            await fetch(`/api/admin/verify-and-update/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(updatedData) });
+            alert("Done!"); loadPending();
         }
 
         async function toggleStatus(id, s) { await fetch(`/api/admin/verify-and-update/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: s }) }); loadAll(); }
-        async function blacklistNumber(phone) { if(confirm("Permanently ban this broker and hide their listings?")) { await fetch('/api/admin/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone }) }); loadAll(); } }
-        async function deleteProp(id) { if(confirm("Delete forever?")) { await fetch(`/api/admin/delete/${id}`, { method: 'DELETE' }); loadAll(); } }
+        async function blacklistNumber(phone) { if(confirm("Ban this number?")) { await fetch('/api/admin/blacklist', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone }) }); alert("Banned."); loadAll(); } }
+        async function deleteProp(id) { if(confirm("Delete?")) { await fetch(`/api/admin/delete/${id}`, { method: 'DELETE' }); loadAll(); } }
         async function manualAddCoins() { const email = prompt("Email:"); const amount = prompt("Coins:"); if(email && amount) await fetch('/api/admin/add-coins', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: parseInt(amount) }) }); }
     </script>
 </body>

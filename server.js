@@ -33,7 +33,7 @@ const UserSchema = new mongoose.Schema({
 const PropertySchema = new mongoose.Schema({
     title: String, bhkType: String, rent: Number, phone: String, pincode: String,
     locality: String, district: String, state: String, houseNo: String, floorNo: String, street: String,
-    furnishing: String, parking: Boolean, water: Boolean, ownerEmail: String, images: [String],
+    furnishing: String, parking: Boolean, water: Boolean, gatedSecurity: Boolean, ownerEmail: String, images: [String],
     status: { type: String, default: 'pending' }, 
     vacantDate: { type: String, default: 'Available Now' },
     likesCount: { type: Number, default: 0 },
@@ -77,7 +77,6 @@ app.get('/api/user-sync/:email', async (req, res) => {
 // PROPERTIES
 app.post('/api/properties', upload.array('images', 12), async (req, res) => {
     const banned = await Blacklist.findOne({ phone: req.body.phone });
-    // Point 1: Polite Denial Message
     if(banned) return res.status(403).json({ error: "This phone number has been flagged by our safety system. If you believe this is a mistake, please contact Soul Shift Media support." });
     const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
     await newProp.save();
@@ -89,11 +88,6 @@ app.get('/api/properties', async (req, res) => {
     res.json(props);
 });
 
-app.get('/api/my-properties/:email', async (req, res) => {
-    const props = await Property.find({ ownerEmail: req.params.email });
-    res.json(props);
-});
-
 app.post('/api/spend-coin', async (req, res) => {
     const { email, amount, description, propId } = req.body;
     const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } }, { new: true });
@@ -102,7 +96,7 @@ app.post('/api/spend-coin', async (req, res) => {
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
-// SOCIAL & REPORTING
+// SOCIAL & MANAGEMENT
 app.post('/api/wishlist/toggle', async (req, res) => {
     const { email, propId } = req.body;
     const user = await User.findOne({ email });
@@ -124,12 +118,17 @@ app.get('/api/my-wishlist/:email', async (req, res) => {
     res.json(props);
 });
 
+app.get('/api/my-properties/:email', async (req, res) => {
+    const props = await Property.find({ ownerEmail: req.params.email });
+    res.json(props);
+});
+
 app.post('/api/report-broker', async (req, res) => {
     await Property.findByIdAndUpdate(req.body.propId, { isBrokerReported: true });
     res.json({ ok: true });
 });
 
-// ADMIN ENGINE
+// ADMIN
 app.get('/api/admin/pending', async (req, res) => {
     res.json(await Property.find({ status: 'pending' }));
 });
@@ -141,7 +140,6 @@ app.get('/api/admin/all-properties', async (req, res) => {
 app.patch('/api/admin/verify-and-update/:id', async (req, res) => {
     const oldProp = await Property.findById(req.params.id);
     const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
-    
     if(req.body.status === 'verified' && oldProp.status === 'pending') {
         await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } });
         const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Verified: ${p.title}` });
@@ -168,11 +166,6 @@ app.post('/api/admin/add-coins', async (req, res) => {
     res.json({ ok: true, newBalance: user.coins });
 });
 
-app.get('/api/transactions/:email', async (req, res) => {
-    const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
-    res.json(txs);
-});
-
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log("Engine Running"));
+app.listen(PORT, '0.0.0.0', () => console.log("System Online"));
 mongoose.connect(process.env.MONGODB_URI);

@@ -51,7 +51,6 @@
             document.getElementById('userCoins').innerText = syncData.coins;
             document.getElementById('userName').innerText = localStorage.getItem('userName');
 
-            // Load Postings
             const pRes = await fetch(`/api/my-properties/${email}`);
             const props = await pRes.json();
             document.getElementById('my-list').innerHTML = props.map(p => `
@@ -64,7 +63,6 @@
                 </div>
             `).join('');
 
-            // Load Wishlist
             const wRes = await fetch(`/api/my-wishlist/${email}`);
             const wishes = await wRes.json();
             document.getElementById('wish-list').innerHTML = wishes.length ? wishes.map(p => `
@@ -75,7 +73,6 @@
                 </div>
             `).join('') : '<p class="text-slate-400 italic text-sm">No saved properties yet.</p>';
 
-            // Load Activity
             const tRes = await fetch(`/api/transactions/${email}`);
             const txs = await tRes.json();
             document.getElementById('tx-list').innerHTML = txs.map(t => `
