@@ -52,7 +52,7 @@ const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     userEmail: String, type: String, amount: Number, description: String, date: { type: Date, default: Date.now }
 }));
 
-// AUTH & SYNC
+// AUTH
 app.post('/api/signup', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -74,7 +74,7 @@ app.get('/api/user-sync/:email', async (req, res) => {
     res.json({ coins: user.coins, unlocked: user.unlockedProperties, wishlist: user.wishlist });
 });
 
-// PROPERTIES & WISHLIST
+// PROPERTIES
 app.post('/api/properties', upload.array('images', 12), async (req, res) => {
     const banned = await Blacklist.findOne({ phone: req.body.phone });
     if(banned) return res.status(403).json({ error: "This number is blacklisted." });
@@ -88,6 +88,7 @@ app.get('/api/properties', async (req, res) => {
     res.json(props);
 });
 
+// SOCIAL FEATURES
 app.post('/api/wishlist/toggle', async (req, res) => {
     const { email, propId } = req.body;
     const user = await User.findOne({ email });
@@ -127,7 +128,7 @@ app.post('/api/report-broker', async (req, res) => {
     res.json({ ok: true });
 });
 
-// ADMIN ENGINE
+// ADMIN
 app.get('/api/admin/pending', async (req, res) => {
     res.json(await Property.find({ status: 'pending' }));
 });
@@ -137,9 +138,12 @@ app.get('/api/admin/all-properties', async (req, res) => {
 });
 
 app.patch('/api/admin/verify-and-update/:id', async (req, res) => {
+    const oldProp = await Property.findById(req.params.id);
     const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
-    if(req.body.status === 'verified' && p.status === 'verified') {
+    if(req.body.status === 'verified' && oldProp.status === 'pending') {
         await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } });
+        const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Reward: ${p.title}` });
+        await tx.save();
     }
     res.json({ ok: true });
 });
@@ -159,9 +163,16 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
 
 app.post('/api/admin/add-coins', async (req, res) => {
     const user = await User.findOneAndUpdate({ email: req.body.email }, { $inc: { coins: req.body.amount } }, { new: true });
+    const tx = new Transaction({ userEmail: req.body.email, type: 'earned', amount: req.body.amount, description: "Admin Topup" });
+    await tx.save();
     res.json({ ok: true, newBalance: user.coins });
 });
 
+app.get('/api/transactions/:email', async (req, res) => {
+    const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
+    res.json(txs);
+});
+
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => console.log("Engine Running"));
+app.listen(PORT, '0.0.0.0', () => console.log("Metro Engine Ready"));
 mongoose.connect(process.env.MONGODB_URI);

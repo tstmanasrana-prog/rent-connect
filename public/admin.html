@@ -25,10 +25,7 @@
                 <button onclick="manualAddCoins()" class="text-slate-400 text-xs font-bold ml-4">Topup User</button>
             </div>
         </nav>
-
-        <main class="container mx-auto p-6 max-w-6xl">
-            <div id="pendingList" class="space-y-8 mt-6"></div>
-        </main>
+        <main class="container mx-auto p-6 max-w-6xl"><div id="pendingList" class="space-y-8 mt-6"></div></main>
     </div>
 
     <script>
@@ -37,23 +34,17 @@
         async function loadPending() {
             const res = await fetch('/api/admin/pending');
             const data = await res.json();
-            const list = document.getElementById('pendingList');
-            list.innerHTML = data.map(p => `
+            document.getElementById('pendingList').innerHTML = data.map(p => `
                 <div class="bg-slate-800 border border-slate-700 rounded-[2.5rem] p-10 shadow-2xl">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                         <div><div class="grid grid-cols-3 gap-2">${p.images.map(img => `<img src="${img}" class="rounded-xl aspect-square object-cover" onclick="window.open('${img}')">`).join('')}</div></div>
                         <div class="space-y-4">
                             <input type="text" id="title-${p._id}" value="${p.title}" class="bg-slate-700 w-full p-4 rounded-2xl text-sm font-bold border-none outline-none">
-                            <div class="bg-white rounded-2xl p-4 text-slate-900">
-                                <p class="text-[10px] font-black uppercase text-indigo-600">Landlord Phone</p>
-                                <input type="text" id="phone-${p._id}" value="${p.phone}" class="text-xl font-black w-full outline-none">
-                            </div>
+                            <div class="bg-white rounded-2xl p-4 text-slate-900"><p class="text-[10px] font-black text-indigo-600">Owner Phone</p><input type="text" id="phone-${p._id}" value="${p.phone}" class="text-xl font-black w-full outline-none"></div>
                             <div class="grid grid-cols-3 gap-2">
-                                <input type="text" id="houseNo-${p._id}" value="${p.houseNo}" placeholder="House" class="bg-slate-700 p-3 rounded-xl text-xs">
-                                <input type="text" id="floorNo-${p._id}" value="${p.floorNo}" placeholder="Floor" class="bg-slate-700 p-3 rounded-xl text-xs">
-                                <input type="text" id="rent-${p._id}" value="${p.rent}" placeholder="Rent" class="bg-slate-700 p-3 rounded-xl text-xs">
+                                <input type="text" id="houseNo-${p._id}" value="${p.houseNo}" class="bg-slate-700 p-3 rounded-xl text-xs"><input type="text" id="floorNo-${p._id}" value="${p.floorNo}" class="bg-slate-700 p-3 rounded-xl text-xs"><input type="text" id="rent-${p._id}" value="${p.rent}" class="bg-slate-700 p-3 rounded-xl text-xs">
                             </div>
-                            <button onclick="verifyAndSave('${p._id}')" class="w-full bg-indigo-600 py-4 rounded-2xl font-black transition">Approve & Pay 3 Coins</button>
+                            <button onclick="verifyAndSave('${p._id}')" class="w-full bg-indigo-600 py-4 rounded-2xl font-black">Approve & Pay 3 Coins</button>
                         </div>
                     </div>
                 </div>
@@ -63,24 +54,20 @@
         async function loadAll() {
             const res = await fetch('/api/admin/all-properties');
             const data = await res.json();
-            const list = document.getElementById('pendingList');
-            list.innerHTML = `<h2 class="text-2xl font-bold mb-8">Global Inventory Management</h2>` + data.map(p => `
+            document.getElementById('pendingList').innerHTML = `<h2 class="text-2xl font-bold mb-8 uppercase tracking-widest">Global Management</h2>` + data.map(p => `
                 <div class="bg-slate-800 p-6 rounded-3xl border ${p.isBrokerReported ? 'border-rose-500 bg-rose-500/5' : 'border-slate-700'} mb-4 flex justify-between items-center">
-                    <div>
-                        <p class="font-bold">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500 ml-2 font-black text-[10px]">[REPORTED]</span>' : ''}</p>
-                        <p class="text-indigo-400 text-sm">${p.phone} (${p.status.toUpperCase()})</p>
-                    </div>
+                    <div><p class="font-bold">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500">[REPORTED]</span>' : ''}</p><p class="text-indigo-400 text-sm">${p.phone} (${p.status})</p></div>
                     <div class="flex gap-2">
-                        <button onclick="toggleStatus('${p._id}', '${p.status==='verified'?'rented':'verified'}')" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">Toggle Available/Rented</button>
-                        <button onclick="blacklistNumber('${p.phone}')" class="bg-rose-600 px-4 py-2 rounded-xl text-xs font-bold">Blacklist Broker</button>
+                        <button onclick="toggleStatus('${p._id}', '${p.status==='verified'?'rented':'verified'}')" class="bg-indigo-600 px-4 py-2 rounded-xl text-xs font-bold uppercase">Toggle Status</button>
+                        <button onclick="blacklistNumber('${p.phone}')" class="bg-rose-600 px-4 py-2 rounded-xl text-xs font-bold uppercase">Ban Number</button>
                     </div>
                 </div>
             `).join('');
         }
 
         async function verifyAndSave(id) {
-            const updatedData = { title: document.getElementById(`title-${id}`).value, phone: document.getElementById(`phone-${id}`).value, houseNo: document.getElementById(`houseNo-${id}`).value, floorNo: document.getElementById(`floorNo-${id}`).value, rent: document.getElementById(`rent-${id}`).value, status: 'verified' };
-            await fetch(`/api/admin/verify-and-update/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(updatedData) });
+            const body = { title: document.getElementById(`title-${id}`).value, phone: document.getElementById(`phone-${id}`).value, houseNo: document.getElementById(`houseNo-${id}`).value, floorNo: document.getElementById(`floorNo-${id}`).value, rent: document.getElementById(`rent-${id}`).value, status: 'verified' };
+            await fetch(`/api/admin/verify-and-update/${id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
             alert("Live!"); loadPending();
         }
 

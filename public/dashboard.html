@@ -12,7 +12,7 @@
 <body class="bg-slate-50">
     <nav class="bg-white border-b px-6 py-4 sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
-            <a href="index.html" class="text-xl font-extrabold text-slate-900">RentConnect</a>
+            <a href="index.html" class="text-xl font-extrabold text-slate-900"><i class="fas fa-arrow-left mr-2 text-indigo-600"></i> Back to Home</a>
             <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2">
                 <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700">0</span>
             </div>
@@ -30,12 +30,12 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div>
-                    <h3 class="text-xl font-bold mb-6">My Postings</h3>
+                    <h3 class="text-xl font-bold mb-6">My Posted Properties</h3>
                     <div id="my-list" class="space-y-4"></div>
                 </div>
                 <div>
                     <h3 class="text-xl font-bold mb-6">Activity Log</h3>
-                    <div id="tx-list" class="bg-white p-6 rounded-3xl border space-y-4"></div>
+                    <div id="tx-list" class="bg-white p-6 rounded-3xl border space-y-4 shadow-sm"></div>
                 </div>
             </div>
         </div>
@@ -51,15 +51,14 @@
             document.getElementById('userCoins').innerText = syncData.coins;
             document.getElementById('userName').innerText = localStorage.getItem('userName');
 
-            // Load Postings (DELETE REMOVED)
+            // Load Postings
             const pRes = await fetch(`/api/my-properties/${email}`);
             const props = await pRes.json();
-            const myList = document.getElementById('my-list');
-            myList.innerHTML = props.map(p => `
+            document.getElementById('my-list').innerHTML = props.map(p => `
                 <div class="bg-white p-4 rounded-2xl border flex gap-4 items-center">
                     <img src="${p.images[0]}" class="w-16 h-16 rounded-xl object-cover">
                     <div>
-                        <p class="font-bold text-sm">${p.title}</p>
+                        <p class="font-bold text-sm text-slate-800">${p.title}</p>
                         <p class="text-[10px] uppercase font-black text-indigo-500">${p.status}</p>
                     </div>
                 </div>
@@ -68,11 +67,21 @@
             // Load Wishlist
             const wRes = await fetch(`/api/my-wishlist/${email}`);
             const wishes = await wRes.json();
-            document.getElementById('wish-list').innerHTML = wishes.map(p => `
+            document.getElementById('wish-list').innerHTML = wishes.length ? wishes.map(p => `
                 <div class="bg-white p-4 rounded-3xl border shadow-sm">
                     <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4">
                     <p class="font-bold text-slate-800 truncate">${p.title}</p>
                     <p class="text-indigo-600 font-bold">₹${p.rent}</p>
+                </div>
+            `).join('') : '<p class="text-slate-400 italic text-sm">No saved properties yet.</p>';
+
+            // Load Activity
+            const tRes = await fetch(`/api/transactions/${email}`);
+            const txs = await tRes.json();
+            document.getElementById('tx-list').innerHTML = txs.map(t => `
+                <div class="flex justify-between items-center text-xs">
+                    <p class="text-slate-500">${new Date(t.date).toLocaleDateString()} - ${t.description}</p>
+                    <p class="font-bold ${t.type==='spent'?'text-rose-500':'text-green-500'}">${t.type==='spent'?'-':'+'}${t.amount}</p>
                 </div>
             `).join('');
         }
