@@ -15,23 +15,38 @@
         .qr-frame { border: 8px solid white; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
         .heart-btn { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .heart-btn:active { transform: scale(1.4); }
+        
+        /* Mobile Specific Fixes */
+        @media (max-width: 640px) {
+            .nav-text { display: none; } /* Hides text on small buttons to save space */
+            .hero-title { font-size: 2.25rem !important; line-height: 2.5rem !important; }
+            .modal-content { padding: 1.5rem !important; }
+        }
     </style>
 </head>
 <body>
 
-    <nav class="glass-nav sticky top-0 z-50 px-6 py-4">
+    <nav class="glass-nav sticky top-0 z-50 px-4 md:px-6 py-4">
         <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg"><i class="fas fa-home"></i></div>
-                <h1 class="text-xl font-extrabold tracking-tight">Rent<span class="text-indigo-600">Connect</span></h1>
+            <div class="flex items-center gap-2 md:gap-3">
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg"><i class="fas fa-home text-sm md:text-base"></i></div>
+                <h1 class="text-lg md:text-xl font-extrabold tracking-tight whitespace-nowrap">Rent<span class="text-indigo-600">Connect</span></h1>
             </div>
-            <div class="flex items-center gap-4 relative">
-                <div id="coinDisplay" class="hidden items-center bg-amber-50 border border-amber-200 px-4 py-2 rounded-full gap-2 transition hover:bg-amber-100 cursor-default">
-                    <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700 text-sm">0</span>
+
+            <div class="flex items-center gap-2 md:gap-4">
+                <div id="coinDisplay" class="hidden items-center bg-amber-50 border border-amber-200 px-3 py-1.5 md:px-4 md:py-2 rounded-full gap-2 transition">
+                    <i class="fas fa-coins text-amber-500 text-xs md:text-sm"></i>
+                    <span id="userCoins" class="font-bold text-amber-700 text-xs md:text-sm">0</span>
                 </div>
-                <button onclick="handlePostPropertyClick()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition hover:bg-indigo-700">Post Property</button>
+                
+                <button onclick="handlePostPropertyClick()" class="bg-indigo-600 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg text-xs md:text-sm whitespace-nowrap">
+                    <i class="fas fa-plus mr-1 md:mr-2"></i><span class="nav-text">Post Property</span>
+                </button>
+
                 <div class="relative inline-block">
-                    <button id="loginBtn" onclick="toggleModal('authModal')" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg">Sign In</button>
+                    <button id="loginBtn" onclick="toggleModal('authModal')" class="bg-slate-900 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg text-xs md:text-sm whitespace-nowrap">
+                        <i class="fas fa-user-circle mr-1 md:mr-2"></i><span class="nav-text" id="loginBtnText">Sign In</span>
+                    </button>
                     <div id="userMenu" class="hidden absolute right-0 mt-3 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-[300]">
                         <a href="dashboard.html" class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50">Dashboard</a>
                         <button onclick="logout()" class="w-full text-left px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50">Logout</button>
@@ -42,78 +57,78 @@
     </nav>
 
     <div id="authModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[200] p-4 backdrop-blur-md">
-        <div class="bg-white p-10 rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
-            <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl transition hover:text-rose-500">&times;</button>
-            <h3 id="authTitle" class="text-3xl font-black mb-6 text-slate-900">Join RentConnect</h3>
+        <div class="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
+            <button onclick="toggleModal('authModal')" class="absolute top-4 right-4 md:top-6 md:right-6 text-slate-300 text-2xl">&times;</button>
+            <h3 id="authTitle" class="text-2xl md:text-3xl font-black mb-6 text-slate-900">Join RentConnect</h3>
             <div class="space-y-4 text-left">
                 <div id="nameFields" class="grid grid-cols-2 gap-4">
-                    <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-4 rounded-xl outline-none">
-                    <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-4 rounded-xl outline-none">
+                    <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full">
+                    <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full">
                 </div>
-                <input type="email" id="authEmail" placeholder="Email" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <input type="text" id="authPhone" placeholder="Mobile" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-4 rounded-xl outline-none">
-                <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold shadow-lg transition hover:bg-indigo-700">Continue</button>
-                <p class="text-center text-sm mt-4"><button onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline transition">Switch Login/Signup</button></p>
+                <input type="email" id="authEmail" placeholder="Email" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none">
+                <input type="text" id="authPhone" placeholder="Mobile" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none">
+                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none">
+                <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-3 md:p-4 rounded-xl font-bold shadow-lg transition">Continue</button>
+                <p class="text-center text-xs md:text-sm mt-4"><button onclick="toggleAuthMode()" class="text-indigo-600 font-bold">Switch Login/Signup</button></p>
             </div>
         </div>
     </div>
 
-    <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[400] p-4 backdrop-blur-md">
-        <div class="bg-white p-8 rounded-[2.5rem] w-full max-w-3xl max-h-[90vh] overflow-y-auto relative shadow-2xl">
-            <button onclick="toggleModal('postModal')" class="absolute top-6 right-6 text-slate-400 hover:text-rose-500 text-3xl transition">&times;</button>
-            <h3 class="text-3xl font-black mb-2 text-slate-900">List Property</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div class="md:col-span-2"><input type="text" id="title" placeholder="Title" class="w-full bg-slate-50 p-4 rounded-2xl outline-none border border-transparent focus:border-indigo-500 transition"></div>
-                <div class="md:col-span-2"><select id="bhkType" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"><option value="1 RK">1 RK</option><option value="1 BHK">1 BHK</option><option value="2 BHK">2 BHK</option><option value="3 BHK">3 BHK</option></select></div>
-                <div><input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"></div>
-                <div><input type="text" id="locality" placeholder="Locality" class="w-full bg-slate-100 p-4 rounded-2xl outline-none" readonly></div>
-                <input type="text" id="district" class="hidden"><input type="text" id="state" class="hidden">
-                <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"></div>
-                <div><input type="text" id="floorNo" placeholder="Floor" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"></div>
-                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street/Landmark" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"></div>
-                <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"></div>
-                <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-4 rounded-2xl outline-none"></div>
+    <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[400] p-2 md:p-4 backdrop-blur-md">
+        <div class="bg-white p-5 md:p-8 rounded-[2rem] w-full max-w-3xl max-h-[95vh] overflow-y-auto relative shadow-2xl">
+            <button onclick="toggleModal('postModal')" class="absolute top-4 right-4 text-slate-400 text-2xl">&times;</button>
+            <h3 class="text-2xl md:text-3xl font-black mb-2 text-slate-900">List Property</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6">
+                <div class="md:col-span-2"><input type="text" id="title" placeholder="Title (e.g. 2BHK in Bandra)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border border-transparent focus:border-indigo-500 outline-none"></div>
+                <div class="md:col-span-2"><select id="bhkType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none"><option value="1 RK">1 RK</option><option value="1 BHK">1 BHK</option><option value="2 BHK">2 BHK</option><option value="3 BHK">3 BHK</option></select></div>
+                <div><input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
+                <div><input type="text" id="locality" placeholder="Locality" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
+                <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
+                <div><input type="text" id="floorNo" placeholder="Floor" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
+                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
+                <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
+                <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
                 
-                <div class="md:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
+                <div class="md:col-span-2 grid grid-cols-2 gap-3 py-2">
                     <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none"><option value="Unfurnished">Unfurnished</option><option value="Semi-Furnished">Semi-Furnished</option><option value="Fully Furnished">Fully Furnished</option></select>
-                    <div class="flex items-center gap-2 pt-6"><input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Parking</label></div>
-                    <div class="flex items-center gap-2 pt-6"><input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Water</label></div>
-                    <div class="flex items-center gap-2 pt-6"><input type="checkbox" id="gatedSecurity" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Gated Security</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Parking</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Water</label></div>
+                    <div class="flex items-center gap-2"><input type="checkbox" id="gatedSecurity" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-indigo-600">Gated</label></div>
                 </div>
                 
-                <div class="md:col-span-2"><input type="file" id="multiImages" multiple class="w-full text-sm text-slate-500 mt-2"></div>
-                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-5 rounded-2xl font-bold shadow-xl">Submit for Review</button>
+                <div class="md:col-span-2"><input type="file" id="multiImages" multiple class="w-full text-xs text-slate-500 mt-2"></div>
+                <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-4 md:p-5 rounded-2xl font-bold shadow-xl">Submit Review</button>
             </div>
         </div>
     </div>
 
-    <div id="galleryOverlay" class="fixed inset-0 bg-black/95 hidden z-[300] flex flex-col justify-center items-center p-4">
+    <section class="hero-pattern text-white py-16 md:py-24 px-6 text-center">
+        <h2 class="hero-title text-3xl md:text-6xl font-extrabold mb-6 leading-tight">Find your next home <br/><span class="text-indigo-300">without brokerage.</span></h2>
+        <div class="bg-white rounded-2xl p-1.5 md:p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
+            <input type="text" id="mainPropertySearch" autocomplete="off" oninput="filterProperties()" placeholder="Search Locality..." class="flex-1 px-4 py-3 md:px-6 md:py-4 text-slate-800 rounded-xl outline-none text-base md:text-lg">
+            <button onclick="filterProperties()" class="bg-indigo-600 text-white px-6 py-3 md:px-10 md:py-4 rounded-xl font-bold transition">Search</button>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-4 md:px-6 py-8 md:py-12">
+        <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 md:mb-8">Verified Metro Listings</h3>
+        <div id="property-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"></div>
+    </main>
+
+    <div id="galleryOverlay" class="fixed inset-0 bg-black/95 hidden z-[600] flex flex-col justify-center items-center p-4">
         <button onclick="closeGallery()" class="absolute top-6 right-6 text-white text-4xl">&times;</button>
         <div class="relative w-full max-w-5xl flex items-center justify-center">
-            <button onclick="prevImg()" class="absolute left-0 text-white bg-white/10 p-4 rounded-full hover:bg-white/20 transition"><i class="fas fa-chevron-left"></i></button>
-            <img id="galleryImg" src="" class="rounded-xl shadow-2xl">
-            <button onclick="nextImg()" class="absolute right-0 text-white bg-white/10 p-4 rounded-full hover:bg-white/20 transition"><i class="fas fa-chevron-right"></i></button>
+            <button onclick="prevImg()" class="absolute left-0 text-white p-4"><i class="fas fa-chevron-left text-2xl"></i></button>
+            <img id="galleryImg" src="" class="rounded-xl shadow-2xl max-w-full">
+            <button onclick="nextImg()" class="absolute right-0 text-white p-4"><i class="fas fa-chevron-right text-2xl"></i></button>
         </div>
         <p id="galleryCounter" class="text-white/50 mt-6 font-bold"></p>
     </div>
 
-    <section class="hero-pattern text-white py-24 px-6 text-center">
-        <h2 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">Find your next home <br/><span class="text-indigo-300">without brokerage.</span></h2>
-        <div class="bg-white rounded-2xl p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
-            <input type="text" id="mainPropertySearch" autocomplete="off" oninput="filterProperties()" placeholder="Mumbai, Bangalore, Chennai..." class="flex-1 px-6 py-4 text-slate-800 rounded-xl outline-none text-lg">
-            <button onclick="filterProperties()" class="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold">Search</button>
-        </div>
-    </section>
-
-    <main class="container mx-auto px-6 py-12">
-        <h3 class="text-2xl font-bold text-slate-800 mb-8">Verified Listings</h3>
-        <div id="property-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-    </main>
-
     <footer class="py-12 text-center border-t border-slate-200 mt-20">
         <p class="text-slate-400 text-xs font-medium">© 2026 Soul Shift Media | Mumbai · Bangalore · Chennai</p>
-        <a href="admin.html" class="text-slate-200 hover:text-indigo-400 transition mt-3 text-[10px] inline-block font-bold">Admin Center</a>
+        <a href="admin.html" class="text-slate-200 hover:text-indigo-400 transition mt-3 text-[10px] inline-block font-bold uppercase tracking-widest">Admin Access</a>
     </footer>
 
     <script>
@@ -138,9 +153,9 @@
         }
 
         async function reportBroker(propId) {
-            if(confirm("Report as broker? Admin will verify.")) {
+            if(confirm("Report this as a broker listing?")) {
                 await fetch('/api/report-broker', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ propId }) });
-                alert("Reported. We will investigate.");
+                alert("Reported. Admin will investigate.");
             }
         }
 
@@ -150,8 +165,6 @@
                 const data = await res.json();
                 if(data[0].Status === "Success") {
                     document.getElementById('locality').value = data[0].PostOffice[0].Name;
-                    document.getElementById('district').value = data[0].PostOffice[0].District;
-                    document.getElementById('state').value = data[0].PostOffice[0].State;
                 }
             }
         }
@@ -188,26 +201,9 @@
             formData.append('gatedSecurity', document.getElementById('gatedSecurity').checked);
             const files = document.getElementById('multiImages').files;
             for(let i=0; i<files.length; i++) formData.append('images', files[i]);
-            
             const res = await fetch('/api/properties', { method: 'POST', body: formData });
             const data = await res.json();
-            if(res.ok) { alert("Listing sent for verification!"); location.reload(); } 
-            else { alert(data.error); }
-        }
-
-        async function unlockContact(e, phone, propId) {
-            const email = localStorage.getItem('userEmail');
-            if(!email) { toggleModal('authModal'); return; }
-            if(parseInt(localStorage.getItem('userCoins')) < 1) { alert("You need at least 1 coin to unlock."); return; }
-            if(confirm("Unlock contact for 1 Coin?")) {
-                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: 1, description: "Contact Unlock", propId }) });
-                if(res.ok) location.reload();
-            }
-        }
-
-        function filterProperties() {
-            const term = document.getElementById('mainPropertySearch').value.toLowerCase();
-            document.querySelectorAll('#property-list > div').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; });
+            if(res.ok) { alert("Listing sent for verification!"); location.reload(); } else { alert(data.error); }
         }
 
         function openGallery(imagesJson) { currentPropImages = JSON.parse(decodeURIComponent(imagesJson)); currentImgIdx = 0; updateGalleryUI(); document.getElementById('galleryOverlay').classList.remove('hidden'); }
@@ -228,9 +224,8 @@
                     document.getElementById('coinDisplay').classList.remove('hidden');
                     document.getElementById('coinDisplay').classList.add('flex');
                     document.getElementById('userCoins').innerText = syncData.coins;
-                    const loginBtn = document.getElementById('loginBtn');
-                    loginBtn.innerHTML = `Hi, ${localStorage.getItem('userName')}`;
-                    loginBtn.onclick = () => document.getElementById('userMenu').classList.toggle('hidden');
+                    document.getElementById('loginBtnText').innerText = localStorage.getItem('userName');
+                    document.getElementById('userMenu').classList.add('hidden');
                 }
             }
 
@@ -248,46 +243,55 @@
 
                 list.insertAdjacentHTML('beforeend', `
                     <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4 relative">
-                        <div onclick="openGallery('${imgsData}')" class="relative cursor-pointer group">
-                            <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4 group-hover:opacity-90 transition shadow-inner">
+                        <div onclick="openGallery('${imgsData}')" class="relative cursor-pointer group mb-4">
+                            <img src="${p.images[0]}" class="w-full h-48 md:h-56 object-cover rounded-2xl group-hover:opacity-95 transition shadow-inner">
                             
                             <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black shadow-lg border border-indigo-100 uppercase">${p.bhkType}</div>
                             
                             <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
                             
-                            <div class="absolute bottom-6 left-3 bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-md"><i class="fas fa-camera mr-1"></i> ${p.images.length} Photos</div>
-                            
-                            <button onclick="event.stopPropagation(); toggleWishlist('${p._id}')" class="heart-btn absolute bottom-6 right-3 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg hover:scale-110">
+                            <button onclick="event.stopPropagation(); toggleWishlist('${p._id}')" class="heart-btn absolute bottom-3 right-3 z-10 w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-slate-100 hover:scale-110 active:scale-125">
                                 <i class="${isWishlisted ? 'fas' : 'far'} fa-heart text-${isWishlisted ? 'rose-500' : 'slate-400'}"></i>
                             </button>
                         </div>
+
+                        <h4 class="font-bold text-lg text-slate-800 truncate px-1">${p.title}</h4>
+                        <div class="flex justify-between items-center mt-1 mb-3 px-1">
+                            <p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p>
+                            <p class="text-slate-400 text-xs font-semibold">${p.locality}</p>
+                        </div>
                         
-                        <h4 class="font-bold text-lg text-slate-800 truncate">${p.title}</h4>
-                        <div class="flex justify-between items-center mt-1 mb-2"><p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p><p class="text-slate-400 text-xs">${p.locality}</p></div>
-                        
-                        <div class="flex flex-wrap gap-2 mb-4">
-                             <span class="text-[9px] bg-slate-50 px-2 py-1 rounded-full border text-slate-500 font-bold">${p.furnishing}</span>
-                             ${p.parking ? '<span class="text-[9px] bg-green-50 px-2 py-1 rounded-full border border-green-100 text-green-600 font-bold">Parking</span>' : ''}
-                             ${p.water ? '<span class="text-[9px] bg-blue-50 px-2 py-1 rounded-full border border-blue-100 text-blue-600 font-bold">24hr Water</span>' : ''}
-                             ${p.gatedSecurity ? '<span class="text-[9px] bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 font-bold">Gated Security</span>' : ''}
+                        <div class="flex flex-wrap gap-1.5 mb-4 px-1">
+                             <span class="text-[9px] bg-slate-50 px-2 py-1 rounded-full border text-slate-500 font-bold uppercase">${p.furnishing}</span>
+                             ${p.parking ? '<span class="text-[9px] bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 text-emerald-600 font-bold">Parking</span>' : ''}
+                             ${p.water ? '<span class="text-[9px] bg-blue-50 px-2 py-1 rounded-full border border-blue-100 text-blue-600 font-bold">Water</span>' : ''}
+                             ${p.gatedSecurity ? '<span class="text-[9px] bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 font-bold">Gated Society</span>' : ''}
                         </div>
 
-                        <p class="text-[10px] text-slate-400 font-bold mb-4"><i class="fas fa-heart text-rose-400 mr-1"></i> ${p.likesCount || 0} interested</p>
+                        <p class="text-[10px] text-slate-400 font-bold mb-4 px-1"><i class="fas fa-heart text-rose-400 mr-1 text-[9px]"></i> ${p.likesCount || 0} interested</p>
                         
                         ${isUnlocked ? `
                             <div class="space-y-2">
-                                <button onclick="window.open('https://wa.me/${p.phone}')" class="w-full bg-green-600 text-white p-4 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2">
+                                <button onclick="window.open('https://wa.me/${p.phone}')" class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 hover:bg-green-700">
                                     <i class="fab fa-whatsapp"></i> ${p.phone}
                                 </button>
-                                <button onclick="reportBroker('${p._id}')" class="w-full bg-slate-50 text-slate-400 p-2 rounded-lg text-[10px] font-bold hover:text-rose-500 transition">Report Broker</button>
+                                <button onclick="reportBroker('${p._id}')" class="w-full text-slate-400 text-[10px] font-bold py-1 hover:text-rose-500 transition">Report Broker</button>
                             </div>
                         ` : `
-                            <button onclick="unlockContact(event, '${p.phone}', '${p._id}')" class="w-full bg-slate-900 text-white p-4 rounded-xl font-bold shadow-lg transition hover:scale-[1.01]">Unlock Contact (1 Coin)</button>
+                            <button onclick="unlockContact(event, '${p.phone}', '${p._id}')" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold shadow-lg transition hover:bg-indigo-600">Unlock Contact (1 Coin)</button>
                         `}
                     </div>
                 `);
             });
         }
+        
+        function filterProperties() {
+            const term = document.getElementById('mainPropertySearch').value.toLowerCase();
+            document.querySelectorAll('#property-list > div').forEach(card => { 
+                card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; 
+            });
+        }
+        
         window.onload = loadData;
     </script>
 </body>
