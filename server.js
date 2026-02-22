@@ -39,8 +39,8 @@ const PropertySchema = new mongoose.Schema({
     vacantDate: { type: String, default: 'Available Now' },
     likesCount: { type: Number, default: 0 },
     isBrokerReported: { type: Boolean, default: false },
-    reportReasons: [String], // NEW FIELD
-    reportComments: String   // NEW FIELD
+    reportReasons: [String],
+    reportComments: String   
 });
 
 const BlacklistSchema = new mongoose.Schema({
@@ -95,10 +95,12 @@ app.get('/api/properties', async (req, res) => {
     res.json(props);
 });
 
+// FIXED SPEND COIN LOGIC
 app.post('/api/spend-coin', async (req, res) => {
     const { email, amount, description, propId } = req.body;
     const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } }, { new: true });
-    const tx = new Transaction({ userEmail: email, type: 'spent', amount, description });
+    // Force type 'spent' for consistency
+    const tx = new Transaction({ userEmail: email, type: 'spent', amount: amount, description: description || "Contact Unlocked" });
     await tx.save();
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
@@ -140,7 +142,6 @@ app.get('/api/my-properties/:email', async (req, res) => {
     res.json(props);
 });
 
-// UPGRADED REPORT ROUTE
 app.post('/api/report-broker', async (req, res) => {
     try {
         const { propId, reasons, other } = req.body;
@@ -164,12 +165,14 @@ app.get('/api/admin/all-properties', async (req, res) => {
     res.json(await Property.find().sort({ _id: -1 }));
 });
 
+// FIXED ADMIN VERIFY LOGIC
 app.patch('/api/admin/verify-and-update/:id', async (req, res) => {
     const oldProp = await Property.findById(req.params.id);
     const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
     if(req.body.status === 'verified' && oldProp.status === 'pending') {
         await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } });
-        const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Verified: ${p.title}` });
+        // Force type 'earned' for consistency
+        const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Listing Verified: ${p.title}` });
         await tx.save();
     }
     res.json({ ok: true });
@@ -188,14 +191,16 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
     res.json({ ok: true });
 });
 
+// FIXED MANUAL COIN LOGIC
 app.post('/api/admin/add-coins', async (req, res) => {
     const { email, amount } = req.body;
     const user = await User.findOneAndUpdate({ email: email }, { $inc: { coins: amount } }, { new: true });
+    // Force type 'earned' for consistency
     const tx = new Transaction({ 
         userEmail: email, 
         type: 'earned', 
         amount: amount, 
-        description: "Bonus coins from Admin" 
+        description: "Admin Credit Bonus" 
     });
     await tx.save();
     res.json({ ok: true, newBalance: user.coins });

@@ -51,9 +51,9 @@
                     <h3 class="text-xl font-bold mb-6 text-slate-800 flex items-center">
                         <i class="fas fa-history mr-2 text-amber-500"></i> Activity Log
                     </h3>
-                    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
                         <div id="tx-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                            <p class="text-slate-400 italic text-sm">Syncing transactions...</p>
+                            <p class="text-slate-400 italic text-sm text-center py-4">Syncing history...</p>
                         </div>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
         document.getElementById('userName').innerText = displayName || 'User';
 
         async function loadDashboard() {
-            // 1. Fetch User Sync
+            // 1. Sync Coins
             try {
                 const syncRes = await fetch(`/api/user-sync/${userEmail}`);
                 if (syncRes.ok) {
@@ -78,13 +78,13 @@
                 }
             } catch (e) { console.error("Sync Error"); }
 
-            // 2. Fetch My Properties (UPDATED WITH NEW FIELDS)
+            // 2. Load My Properties
             try {
                 const pRes = await fetch(`/api/my-properties/${userEmail}`);
                 const props = await pRes.json();
                 const myList = document.getElementById('my-list');
                 myList.innerHTML = props.length ? props.map(p => `
-                    <div class="bg-white p-5 rounded-2xl border border-slate-100 flex gap-4 items-start shadow-sm">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 flex gap-4 items-start shadow-sm hover:shadow-md transition">
                         <img src="${p.images[0]}" class="w-20 h-20 rounded-xl object-cover shadow-inner">
                         <div class="flex-1 min-w-0">
                             <p class="font-bold text-slate-800 truncate">${p.title}</p>
@@ -99,17 +99,17 @@
                 `).join('') : '<p class="text-slate-400 text-sm italic">No properties posted yet.</p>';
             } catch (e) { console.error("Props Error"); }
 
-            // 3. Fetch Wishlist Details (UPDATED)
+            // 3. Load Wishlist
             try {
                 const wRes = await fetch(`/api/my-wishlist/${userEmail}`);
                 const wishes = await wRes.json();
                 const wishListDiv = document.getElementById('wish-list');
                 wishListDiv.innerHTML = wishes.length ? wishes.map(p => `
-                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition">
                         <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4">
                         <p class="font-bold text-slate-800 truncate text-sm">${p.title}</p>
                         <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase">${p.district || ''}</p>
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between items-center mt-2">
                             <p class="text-indigo-600 font-extrabold text-sm">₹${p.rent}</p>
                             <span class="text-[8px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-bold uppercase">For: ${p.tenantType || 'All'}</span>
                         </div>
@@ -117,26 +117,27 @@
                 `).join('') : '<p class="text-slate-400 text-sm italic">Your wishlist is empty.</p>';
             } catch (e) { console.error("Wishlist Error"); }
 
-            // 4. Fetch Transactions (ACTIVITY LOG)
+            // 4. Load Activity Log (Coin History)
             try {
                 const tRes = await fetch(`/api/transactions/${userEmail}`);
                 const txs = await tRes.json();
                 const txListDiv = document.getElementById('tx-list');
                 
                 if (Array.isArray(txs) && txs.length > 0) {
-                    txListDiv.innerHTML = txs.reverse().map(t => {
-                        const isSpent = t.type === 'spent' || (t.amount < 0);
+                    txListDiv.innerHTML = txs.map(t => {
+                        // Strict check against server-defined types: 'spent' or 'earned'
+                        const isSpent = t.type === 'spent' || t.amount < 0;
                         const amt = Math.abs(t.amount);
-                        const date = t.date ? new Date(t.date).toLocaleDateString('en-IN', {day:'2-digit', month:'short'}) : 'Now';
+                        const date = t.date ? new Date(t.date).toLocaleDateString('en-IN', {day:'2-digit', month:'short'}) : 'Recently';
                         
                         return `
-                            <div class="flex justify-between items-center pb-3 border-b border-slate-50 last:border-0">
+                            <div class="flex justify-between items-center py-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition px-2 rounded-xl">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full flex items-center justify-center ${isSpent ? 'bg-rose-50 text-rose-500' : 'bg-green-50 text-green-500'}">
                                         <i class="fas ${isSpent ? 'fa-minus' : 'fa-plus'} text-[10px]"></i>
                                     </div>
                                     <div>
-                                        <p class="text-[11px] font-bold text-slate-700">${t.description || 'Transaction'}</p>
+                                        <p class="text-[11px] font-bold text-slate-700">${t.description || 'Coin Transaction'}</p>
                                         <p class="text-[9px] text-slate-400 font-medium">${date}</p>
                                     </div>
                                 </div>
@@ -147,11 +148,11 @@
                         `;
                     }).join('');
                 } else {
-                    txListDiv.innerHTML = '<p class="text-slate-400 text-sm italic text-center py-4">No activity logged yet.</p>';
+                    txListDiv.innerHTML = '<div class="text-center py-6"><i class="fas fa-receipt text-slate-200 text-3xl mb-2"></i><p class="text-slate-400 text-sm italic">No history found.</p></div>';
                 }
             } catch (err) {
                 console.error("TX Error:", err);
-                document.getElementById('tx-list').innerHTML = '<p class="text-rose-400 text-xs text-center">History unavailable.</p>';
+                document.getElementById('tx-list').innerHTML = '<p class="text-rose-400 text-xs text-center py-4">History sync failed.</p>';
             }
         }
 
