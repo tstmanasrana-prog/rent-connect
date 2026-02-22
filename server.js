@@ -33,7 +33,8 @@ const UserSchema = new mongoose.Schema({
 const PropertySchema = new mongoose.Schema({
     title: String, bhkType: String, rent: Number, phone: String, pincode: String,
     locality: String, district: String, state: String, houseNo: String, floorNo: String, street: String,
-    furnishing: String, parking: Boolean, water: Boolean, gatedSecurity: Boolean, ownerEmail: String, images: [String],
+    furnishing: String, tenantType: String, // NEW FIELD ADDED
+    parking: Boolean, water: Boolean, gatedSecurity: Boolean, ownerEmail: String, images: [String],
     status: { type: String, default: 'pending' }, 
     vacantDate: { type: String, default: 'Available Now' },
     likesCount: { type: Number, default: 0 },
@@ -76,11 +77,20 @@ app.get('/api/user-sync/:email', async (req, res) => {
 
 // PROPERTIES
 app.post('/api/properties', upload.array('images', 12), async (req, res) => {
-    const banned = await Blacklist.findOne({ phone: req.body.phone });
-    if(banned) return res.status(403).json({ error: "This phone number has been flagged by our safety system." });
-    const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
-    await newProp.save();
-    res.json({ ok: true });
+    try {
+        const banned = await Blacklist.findOne({ phone: req.body.phone });
+        if(banned) return res.status(403).json({ error: "This phone number has been flagged by our safety system." });
+        
+        // Capturing all data including the new tenantType, district, and state
+        const newProp = new Property({ 
+            ...req.body, 
+            images: req.files.map(f => f.path) 
+        });
+        await newProp.save();
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: "Error saving property" });
+    }
 });
 
 app.get('/api/properties', async (req, res) => {
@@ -96,7 +106,6 @@ app.post('/api/spend-coin', async (req, res) => {
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
 });
 
-// --- NEWLY ADDED: GET TRANSACTION HISTORY ---
 app.get('/api/transactions/:email', async (req, res) => {
     try {
         const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
@@ -124,6 +133,7 @@ app.post('/api/wishlist/toggle', async (req, res) => {
 
 app.get('/api/my-wishlist/:email', async (req, res) => {
     const user = await User.findOne({ email: req.params.email });
+    if (!user) return res.json([]);
     const props = await Property.find({ _id: { $in: user.wishlist } });
     res.json(props);
 });
@@ -174,8 +184,6 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
 app.post('/api/admin/add-coins', async (req, res) => {
     const { email, amount } = req.body;
     const user = await User.findOneAndUpdate({ email: email }, { $inc: { coins: amount } }, { new: true });
-    
-    // Log the manual admin addition in history
     const tx = new Transaction({ 
         userEmail: email, 
         type: 'earned', 
@@ -183,7 +191,6 @@ app.post('/api/admin/add-coins', async (req, res) => {
         description: "Bonus coins from Admin" 
     });
     await tx.save();
-    
     res.json({ ok: true, newBalance: user.coins });
 });
 
