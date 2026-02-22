@@ -77,7 +77,7 @@ app.get('/api/user-sync/:email', async (req, res) => {
 // PROPERTIES
 app.post('/api/properties', upload.array('images', 12), async (req, res) => {
     const banned = await Blacklist.findOne({ phone: req.body.phone });
-    if(banned) return res.status(403).json({ error: "This phone number has been flagged by our safety system. If you believe this is a mistake, please contact Soul Shift Media support." });
+    if(banned) return res.status(403).json({ error: "This phone number has been flagged by our safety system." });
     const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
     await newProp.save();
     res.json({ ok: true });
@@ -94,6 +94,16 @@ app.post('/api/spend-coin', async (req, res) => {
     const tx = new Transaction({ userEmail: email, type: 'spent', amount, description });
     await tx.save();
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
+});
+
+// --- NEWLY ADDED: GET TRANSACTION HISTORY ---
+app.get('/api/transactions/:email', async (req, res) => {
+    try {
+        const txs = await Transaction.find({ userEmail: req.params.email }).sort({ date: -1 });
+        res.json(txs);
+    } catch (err) {
+        res.status(500).json({ error: "Could not load history" });
+    }
 });
 
 // SOCIAL & MANAGEMENT
@@ -162,7 +172,18 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
 });
 
 app.post('/api/admin/add-coins', async (req, res) => {
-    const user = await User.findOneAndUpdate({ email: req.body.email }, { $inc: { coins: req.body.amount } }, { new: true });
+    const { email, amount } = req.body;
+    const user = await User.findOneAndUpdate({ email: email }, { $inc: { coins: amount } }, { new: true });
+    
+    // Log the manual admin addition in history
+    const tx = new Transaction({ 
+        userEmail: email, 
+        type: 'earned', 
+        amount: amount, 
+        description: "Bonus coins from Admin" 
+    });
+    await tx.save();
+    
     res.json({ ok: true, newBalance: user.coins });
 });
 
