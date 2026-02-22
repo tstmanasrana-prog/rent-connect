@@ -9,8 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .stat-card { transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-5px); }
+        .tx-card { transition: all 0.3s ease; }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -19,7 +18,7 @@
             <a href="index.html" class="text-sm md:text-base font-extrabold text-slate-900 flex items-center">
                 <i class="fas fa-arrow-left mr-2 text-indigo-600"></i> Back to Home
             </a>
-            <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+            <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2">
                 <i class="fas fa-coins text-amber-500"></i>
                 <span id="userCoins" class="font-bold text-amber-700">0</span>
             </div>
@@ -29,7 +28,7 @@
     <main class="container mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl">
         <header class="mb-10">
             <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-2">Welcome, <span id="userName" class="text-indigo-600">User</span>!</h2>
-            <p class="text-slate-500 font-medium">Manage your properties, wishlist, and coin activity here.</p>
+            <p class="text-slate-500 font-medium">Your personal property command center.</p>
         </header>
 
         <div class="space-y-12">
@@ -37,8 +36,7 @@
                 <h3 class="text-xl font-bold mb-6 text-rose-500 flex items-center">
                     <i class="fas fa-heart mr-2"></i> Saved Properties
                 </h3>
-                <div id="wish-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    </div>
+                <div id="wish-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -46,17 +44,16 @@
                     <h3 class="text-xl font-bold mb-6 text-slate-800 flex items-center">
                         <i class="fas fa-home mr-2 text-indigo-600"></i> My Posted Properties
                     </h3>
-                    <div id="my-list" class="space-y-4">
-                        </div>
+                    <div id="my-list" class="space-y-4"></div>
                 </div>
 
                 <div>
                     <h3 class="text-xl font-bold mb-6 text-slate-800 flex items-center">
                         <i class="fas fa-history mr-2 text-amber-500"></i> Activity Log
                     </h3>
-                    <div id="tx-list-container" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                    <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
                         <div id="tx-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                            <p class="text-slate-400 italic text-sm">Loading history...</p>
+                            <p class="text-slate-400 italic text-sm">Syncing transactions...</p>
                         </div>
                     </div>
                 </div>
@@ -65,93 +62,87 @@
     </main>
 
     <script>
-        const email = localStorage.getItem('userEmail');
-        const name = localStorage.getItem('userName');
+        const userEmail = localStorage.getItem('userEmail');
+        const displayName = localStorage.getItem('userName');
         
-        if(!email) window.location.href = 'index.html';
-        document.getElementById('userName').innerText = name || 'User';
+        if(!userEmail) window.location.href = 'index.html';
+        document.getElementById('userName').innerText = displayName || 'User';
 
         async function loadDashboard() {
+            // 1. Fetch User Sync (Coins/Wishlist IDs)
             try {
-                // 1. SYNC COINS
-                const syncRes = await fetch(`/api/user-sync/${email}`);
-                const syncData = await syncRes.json();
-                if(syncRes.ok) {
-                    document.getElementById('userCoins').innerText = syncData.coins;
+                const syncRes = await fetch(`/api/user-sync/${userEmail}`);
+                if (syncRes.ok) {
+                    const syncData = await syncRes.json();
+                    document.getElementById('userCoins').innerText = syncData.coins || 0;
                 }
+            } catch (e) { console.error("Sync Error"); }
 
-                // 2. LOAD MY PROPERTIES
-                const pRes = await fetch(`/api/my-properties/${email}`);
+            // 2. Fetch My Properties
+            try {
+                const pRes = await fetch(`/api/my-properties/${userEmail}`);
                 const props = await pRes.json();
                 const myList = document.getElementById('my-list');
-                if(props.length > 0) {
-                    myList.innerHTML = props.map(p => `
-                        <div class="bg-white p-4 rounded-2xl border border-slate-100 flex gap-4 items-center hover:shadow-md transition">
-                            <img src="${p.images[0] || 'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-xl object-cover shadow-sm">
-                            <div>
-                                <p class="font-bold text-sm text-slate-800">${p.title}</p>
-                                <p class="text-[10px] uppercase font-black px-2 py-0.5 rounded-full inline-block mt-1 ${p.status === 'verified' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}">
-                                    ${p.status || 'Pending'}
-                                </p>
-                            </div>
+                myList.innerHTML = props.length ? props.map(p => `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-50 flex gap-4 items-center shadow-sm">
+                        <img src="${p.images[0]}" class="w-16 h-16 rounded-xl object-cover">
+                        <div>
+                            <p class="font-bold text-sm text-slate-800">${p.title}</p>
+                            <p class="text-[10px] uppercase font-black text-indigo-500">${p.status || 'Pending'}</p>
                         </div>
-                    `).join('');
-                } else {
-                    myList.innerHTML = '<p class="text-slate-400 italic text-sm">You haven\'t posted any properties yet.</p>';
-                }
+                    </div>
+                `).join('') : '<p class="text-slate-400 text-sm italic">No properties posted yet.</p>';
+            } catch (e) { console.error("Props Error"); }
 
-                // 3. LOAD WISHLIST
-                const wRes = await fetch(`/api/my-wishlist/${email}`);
+            // 3. Fetch Wishlist Details
+            try {
+                const wRes = await fetch(`/api/my-wishlist/${userEmail}`);
                 const wishes = await wRes.json();
-                const wishList = document.getElementById('wish-list');
-                if(wishes.length > 0) {
-                    wishList.innerHTML = wishes.map(p => `
-                        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition">
-                            <img src="${p.images[0] || 'https://via.placeholder.com/200'}" class="w-full h-32 object-cover rounded-2xl mb-4 shadow-inner">
-                            <p class="font-bold text-slate-800 truncate px-1">${p.title}</p>
-                            <p class="text-indigo-600 font-bold px-1">₹${p.rent}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    wishList.innerHTML = '<p class="text-slate-400 italic text-sm">No saved properties yet.</p>';
-                }
+                const wishListDiv = document.getElementById('wish-list');
+                wishListDiv.innerHTML = wishes.length ? wishes.map(p => `
+                    <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+                        <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4">
+                        <p class="font-bold text-slate-800 truncate text-sm">${p.title}</p>
+                        <p class="text-indigo-600 font-bold text-sm">₹${p.rent}</p>
+                    </div>
+                `).join('') : '<p class="text-slate-400 text-sm italic">Your wishlist is empty.</p>';
+            } catch (e) { console.error("Wishlist Error"); }
 
-                // 4. LOAD ACTIVITY LOG (FIXED LOGIC)
-                const tRes = await fetch(`/api/transactions/${email}`);
+            // 4. Fetch Transactions (ACTIVITY LOG)
+            try {
+                const tRes = await fetch(`/api/transactions/${userEmail}`);
                 const txs = await tRes.json();
-                const txList = document.getElementById('tx-list');
+                const txListDiv = document.getElementById('tx-list');
                 
-                if(txs && txs.length > 0) {
-                    txList.innerHTML = txs.reverse().map(t => {
-                        // Check for both 'spent' and 'unlocked' as debit types
-                        const isDebit = t.type === 'spent' || t.amount < 0;
-                        const displayAmount = Math.abs(t.amount);
-                        const dateStr = t.date ? new Date(t.date).toLocaleDateString('en-IN', {day:'numeric', month:'short'}) : 'Recently';
-
+                if (Array.isArray(txs) && txs.length > 0) {
+                    txListDiv.innerHTML = txs.reverse().map(t => {
+                        const isSpent = t.type === 'spent' || (t.amount < 0);
+                        const amt = Math.abs(t.amount);
+                        const date = t.date ? new Date(t.date).toLocaleDateString('en-IN', {day:'2-digit', month:'short'}) : 'Now';
+                        
                         return `
-                            <div class="flex justify-between items-center border-b border-slate-50 pb-3 last:border-0">
+                            <div class="flex justify-between items-center pb-3 border-b border-slate-50 last:border-0">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${isDebit ? 'bg-rose-50 text-rose-500' : 'bg-green-50 text-green-500'}">
-                                        <i class="fas ${isDebit ? 'fa-arrow-up' : 'fa-arrow-down'} text-[10px]"></i>
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${isSpent ? 'bg-rose-50 text-rose-500' : 'bg-green-50 text-green-500'}">
+                                        <i class="fas ${isSpent ? 'fa-minus' : 'fa-plus'} text-[10px]"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-slate-800">${t.description || 'Coin Update'}</p>
-                                        <p class="text-[10px] text-slate-400">${dateStr}</p>
+                                        <p class="text-[11px] font-bold text-slate-700">${t.description || 'Transaction'}</p>
+                                        <p class="text-[9px] text-slate-400 font-medium">${date}</p>
                                     </div>
                                 </div>
-                                <p class="font-bold text-xs ${isDebit ? 'text-rose-500' : 'text-green-600'}">
-                                    ${isDebit ? '-' : '+'}${displayAmount}
+                                <p class="text-xs font-black ${isSpent ? 'text-rose-500' : 'text-green-600'}">
+                                    ${isSpent ? '-' : '+'}${amt}
                                 </p>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    txList.innerHTML = '<div class="text-center py-6"><i class="fas fa-receipt text-slate-200 text-3xl mb-2"></i><p class="text-slate-400 italic text-sm">No coin activity found.</p></div>';
+                    txListDiv.innerHTML = '<p class="text-slate-400 text-sm italic text-center py-4">No activity logged yet.</p>';
                 }
-
-            } catch (error) {
-                console.error("Dashboard Load Error:", error);
-                document.getElementById('tx-list').innerHTML = '<p class="text-rose-500 text-xs">Error loading history. Please try again.</p>';
+            } catch (err) {
+                console.error("TX Error:", err);
+                document.getElementById('tx-list').innerHTML = '<p class="text-rose-400 text-xs text-center">History unavailable.</p>';
             }
         }
 
