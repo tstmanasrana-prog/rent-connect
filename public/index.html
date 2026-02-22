@@ -51,6 +51,37 @@
         </div>
     </nav>
 
+    <div id="reportModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[550] p-4 backdrop-blur-sm">
+        <div class="bg-white p-6 md:p-8 rounded-[2rem] w-full max-w-sm relative shadow-2xl">
+            <button onclick="toggleModal('reportModal')" class="absolute top-4 right-4 text-slate-400 text-xl">&times;</button>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">Report Property</h3>
+            <p class="text-slate-500 text-xs mb-6 font-medium">Help us keep RentConnect safe and direct.</p>
+            
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-indigo-50 transition">
+                    <input type="checkbox" name="reportReason" value="Broker/Commercial Agent" class="w-4 h-4 accent-indigo-600">
+                    <span class="text-sm font-bold text-slate-700">Broker/Commercial Agent</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-indigo-50 transition">
+                    <input type="checkbox" name="reportReason" value="Misleading Media/Photos" class="w-4 h-4 accent-indigo-600">
+                    <span class="text-sm font-bold text-slate-700">Misleading Media/Photos</span>
+                </label>
+                <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-indigo-50 transition">
+                    <input type="checkbox" name="reportReason" value="Inaccurate Location" class="w-4 h-4 accent-indigo-600">
+                    <span class="text-sm font-bold text-slate-700">Inaccurate Location</span>
+                </label>
+                
+                <div class="mt-4">
+                    <label class="text-[10px] font-black uppercase text-slate-400 ml-1 mb-1 block">Other / Additional Feedback</label>
+                    <textarea id="otherReportText" placeholder="Tell us more..." class="w-full bg-slate-50 p-3 rounded-xl outline-none border border-transparent focus:border-indigo-500 text-sm h-20 resize-none"></textarea>
+                </div>
+            </div>
+
+            <input type="hidden" id="reportPropId">
+            <button onclick="submitReport()" class="w-full bg-rose-500 text-white p-4 rounded-2xl font-bold shadow-lg hover:bg-rose-600 transition mt-6">Submit Report</button>
+        </div>
+    </div>
+
     <div id="authModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[500] p-4 backdrop-blur-md">
         <div class="bg-white p-6 md:p-10 rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
             <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl transition hover:text-rose-500">&times;</button>
@@ -336,7 +367,7 @@
                                 <button onclick="window.open('https://wa.me/${p.phone}')" class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 hover:bg-green-700">
                                     <i class="fab fa-whatsapp"></i> ${p.phone}
                                 </button>
-                                <button onclick="reportBroker('${p._id}')" class="w-full text-slate-400 text-[10px] font-bold py-1 hover:text-rose-500 transition">Report Broker</button>
+                                <button onclick="openReportModal('${p._id}')" class="w-full text-slate-400 text-[10px] font-bold py-1 hover:text-rose-500 transition">Report</button>
                             </div>
                         ` : `
                             <button onclick="unlockContact(event, '${p.phone}', '${p._id}')" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold shadow-lg transition hover:bg-indigo-600">Unlock Contact (1 Coin)</button>
@@ -346,7 +377,37 @@
             });
         }
         
-        // Modal functions
+        // REPORTING LOGIC
+        function openReportModal(propId) {
+            document.getElementById('reportPropId').value = propId;
+            document.getElementById('otherReportText').value = '';
+            document.querySelectorAll('input[name="reportReason"]').forEach(cb => cb.checked = false);
+            toggleModal('reportModal');
+        }
+
+        async function submitReport() {
+            const propId = document.getElementById('reportPropId').value;
+            const reasons = Array.from(document.querySelectorAll('input[name="reportReason"]:checked')).map(cb => cb.value);
+            const other = document.getElementById('otherReportText').value;
+
+            if (reasons.length === 0 && !other) {
+                alert("Please select a reason or provide feedback.");
+                return;
+            }
+
+            const res = await fetch('/api/report-broker', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ propId, reasons, other }) 
+            });
+            
+            if(res.ok) {
+                alert("Report submitted. Our team will review this listing.");
+                toggleModal('reportModal');
+            }
+        }
+
+        // Shared functionality for Modal switching and Gallery
         function openGallery(imagesJson) { currentPropImages = JSON.parse(decodeURIComponent(imagesJson)); currentImgIdx = 0; updateGalleryUI(); document.getElementById('galleryOverlay').classList.remove('hidden'); }
         function closeGallery() { document.getElementById('galleryOverlay').classList.add('hidden'); }
         function updateGalleryUI() { document.getElementById('galleryImg').src = currentPropImages[currentImgIdx]; document.getElementById('galleryCounter').innerText = `Image ${currentImgIdx + 1} of ${currentPropImages.length}`; }
@@ -358,13 +419,6 @@
             document.querySelectorAll('#property-list > div').forEach(card => { 
                 card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; 
             });
-        }
-        
-        async function reportBroker(propId) {
-            if(confirm("Report this broker?")) {
-                await fetch('/api/report-broker', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ propId }) });
-                alert("Reported.");
-            }
         }
 
         async function unlockContact(e, phone, propId) {

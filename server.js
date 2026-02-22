@@ -33,12 +33,14 @@ const UserSchema = new mongoose.Schema({
 const PropertySchema = new mongoose.Schema({
     title: String, bhkType: String, rent: Number, phone: String, pincode: String,
     locality: String, district: String, state: String, houseNo: String, floorNo: String, street: String,
-    furnishing: String, tenantType: String, // NEW FIELD ADDED
+    furnishing: String, tenantType: String,
     parking: Boolean, water: Boolean, gatedSecurity: Boolean, ownerEmail: String, images: [String],
     status: { type: String, default: 'pending' }, 
     vacantDate: { type: String, default: 'Available Now' },
     likesCount: { type: Number, default: 0 },
-    isBrokerReported: { type: Boolean, default: false }
+    isBrokerReported: { type: Boolean, default: false },
+    reportReasons: [String], // NEW FIELD
+    reportComments: String   // NEW FIELD
 });
 
 const BlacklistSchema = new mongoose.Schema({
@@ -80,12 +82,7 @@ app.post('/api/properties', upload.array('images', 12), async (req, res) => {
     try {
         const banned = await Blacklist.findOne({ phone: req.body.phone });
         if(banned) return res.status(403).json({ error: "This phone number has been flagged by our safety system." });
-        
-        // Capturing all data including the new tenantType, district, and state
-        const newProp = new Property({ 
-            ...req.body, 
-            images: req.files.map(f => f.path) 
-        });
+        const newProp = new Property({ ...req.body, images: req.files.map(f => f.path) });
         await newProp.save();
         res.json({ ok: true });
     } catch (err) {
@@ -143,9 +140,19 @@ app.get('/api/my-properties/:email', async (req, res) => {
     res.json(props);
 });
 
+// UPGRADED REPORT ROUTE
 app.post('/api/report-broker', async (req, res) => {
-    await Property.findByIdAndUpdate(req.body.propId, { isBrokerReported: true });
-    res.json({ ok: true });
+    try {
+        const { propId, reasons, other } = req.body;
+        await Property.findByIdAndUpdate(propId, { 
+            isBrokerReported: true,
+            reportReasons: reasons,
+            reportComments: other
+        });
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: "Report failed" });
+    }
 });
 
 // ADMIN

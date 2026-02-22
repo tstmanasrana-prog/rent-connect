@@ -15,6 +15,10 @@
         .status-reported { border: 2px solid #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; }
         .admin-input { background: #334155; border: 1px solid #475569; padding: 10px; border-radius: 12px; font-size: 13px; color: white; outline: none; width: 100%; }
         .admin-label { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
@@ -145,24 +149,38 @@
                 const statusClass = p.isBrokerReported ? 'status-reported' : `status-${p.status}`;
                 const statusColor = p.status === 'verified' ? 'text-green-400' : 'text-amber-400';
                 
+                // NEW: Logic to display the detailed report reasons
+                const reportBox = p.isBrokerReported ? `
+                    <div class="mt-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl w-full">
+                        <p class="text-[10px] font-black text-rose-500 uppercase mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> Report Audit Details</p>
+                        <div class="flex flex-wrap gap-2 mb-2">
+                            ${(p.reportReasons || []).map(r => `<span class="bg-rose-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">${r}</span>`).join('')}
+                        </div>
+                        <p class="text-slate-300 text-xs italic">"${p.reportComments || 'No specific comment provided.'}"</p>
+                    </div>
+                ` : '';
+
                 return `
-                    <div class="bg-slate-800 p-6 rounded-3xl mb-4 flex flex-col md:flex-row justify-between items-center gap-4 ${statusClass} border border-slate-700">
-                        <div class="flex items-center gap-4">
-                            <img src="${p.images[0]}" class="w-16 h-16 rounded-xl object-cover">
-                            <div>
-                                <p class="font-bold text-lg text-white">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500 font-black text-xs ml-2">[REPORTED]</span>' : ''}</p>
-                                <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter">${p.locality}, ${p.district}</p>
-                                <p class="text-[10px] uppercase font-black ${statusColor} mt-1">${p.status}</p>
+                    <div class="bg-slate-800 p-6 rounded-3xl mb-4 flex flex-col gap-4 ${statusClass} border border-slate-700">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div class="flex items-center gap-4">
+                                <img src="${p.images[0]}" class="w-16 h-16 rounded-xl object-cover">
+                                <div>
+                                    <p class="font-bold text-lg text-white">${p.title} ${p.isBrokerReported ? '<span class="text-rose-500 font-black text-[10px] ml-2 tracking-widest bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/50 uppercase">Reported</span>' : ''}</p>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter">${p.locality}, ${p.district}</p>
+                                    <p class="text-[10px] uppercase font-black ${statusColor} mt-1">${p.status}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 w-full md:w-auto">
+                                <button onclick="toggleStatus('${p._id}', '${p.status==='verified'?'rented':'verified'}')" 
+                                        class="flex-1 md:flex-none px-6 py-3 rounded-xl text-xs font-bold uppercase transition ${p.status==='verified'?'bg-amber-600 hover:bg-amber-500':'bg-green-600 hover:bg-green-500'}">
+                                    Mark ${p.status==='verified'?'Rented':'Available'}
+                                </button>
+                                <button onclick="blacklistNumber('${p.phone}')" class="px-6 py-3 rounded-xl text-xs font-bold uppercase bg-rose-600 hover:bg-rose-500 transition">Ban Broker</button>
+                                <button onclick="deleteProp('${p._id}')" class="p-3 rounded-xl bg-slate-700 hover:bg-rose-900 transition"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <button onclick="toggleStatus('${p._id}', '${p.status==='verified'?'rented':'verified'}')" 
-                                    class="flex-1 md:flex-none px-6 py-3 rounded-xl text-xs font-bold uppercase transition ${p.status==='verified'?'bg-amber-600 hover:bg-amber-500':'bg-green-600 hover:bg-green-500'}">
-                                Mark ${p.status==='verified'?'Rented':'Available'}
-                            </button>
-                            <button onclick="blacklistNumber('${p.phone}')" class="px-6 py-3 rounded-xl text-xs font-bold uppercase bg-rose-600 hover:bg-rose-500 transition">Ban Broker</button>
-                            <button onclick="deleteProp('${p._id}')" class="p-3 rounded-xl bg-slate-700 hover:bg-rose-900 transition"><i class="fas fa-trash"></i></button>
-                        </div>
+                        ${reportBox}
                     </div>
                 `;
             }).join('');
@@ -170,7 +188,7 @@
 
         async function verifyAndSave(id) {
             const date = prompt("Vacant From?", "Available Now"); 
-            if(date === null) return; // User cancelled
+            if(date === null) return; 
             
             const updatedData = { 
                 title: document.getElementById(`title-${id}`).value, 
