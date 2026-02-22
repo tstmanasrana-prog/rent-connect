@@ -78,21 +78,46 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6">
                 <div class="md:col-span-2"><input type="text" id="title" placeholder="Title" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border border-transparent focus:border-indigo-500 transition"></div>
                 <div class="md:col-span-2"><select id="bhkType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none"><option value="1 RK">1 RK</option><option value="1 BHK">1 BHK</option><option value="2 BHK">2 BHK</option><option value="3 BHK">3 BHK</option></select></div>
+                
                 <div><input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500"></div>
                 <div><input type="text" id="locality" placeholder="Locality" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
-                <input type="text" id="district" class="hidden"><input type="text" id="state" class="hidden">
+                
+                <div><input type="text" id="district" placeholder="District" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
+                <div><input type="text" id="state" placeholder="State" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
+                
                 <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
                 <div><input type="text" id="floorNo" placeholder="Floor" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
                 <div class="md:col-span-2"><input type="text" id="street" placeholder="Street/Landmark" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
+                
                 <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
                 <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
-                <div class="md:col-span-2 grid grid-cols-2 gap-3 py-2">
-                    <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none"><option value="Unfurnished">Unfurnished</option><option value="Semi-Furnished">Semi-Furnished</option><option value="Fully Furnished">Fully Furnished</option></select>
-                    <div class="flex items-center gap-2"><input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Parking</label></div>
-                    <div class="flex items-center gap-2"><input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold">Water</label></div>
-                    <div class="flex items-center gap-2"><input type="checkbox" id="gatedSecurity" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-indigo-600">Gated</label></div>
+                
+                <div class="md:col-span-2">
+                    <select id="tenantType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none">
+                        <option value="">Preferred Tenant</option>
+                        <option value="Family">Family Only</option>
+                        <option value="Bachelor">Bachelor Only</option>
+                        <option value="Anyone">Family / Bachelor</option>
+                    </select>
                 </div>
-                <div class="md:col-span-2"><input type="file" id="multiImages" multiple class="w-full text-xs text-slate-500 mt-2"></div>
+
+                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+                    <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none">
+                        <option value="Unfurnished">Unfurnished</option>
+                        <option value="Semi-Furnished">Semi-Furnished</option>
+                        <option value="Fully Furnished">Fully Furnished</option>
+                    </select>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2"><input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-slate-700">Parking</label></div>
+                        <div class="flex items-center gap-2"><input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-slate-700">Water</label></div>
+                        <div class="flex items-center gap-2"><input type="checkbox" id="gatedSecurity" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-indigo-600">Gated</label></div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <input type="file" id="multiImages" multiple class="w-full text-xs text-slate-500 mt-2">
+                    <p class="text-[10px] text-indigo-500 font-bold mt-1 ml-1">Tip: Properties with photos of every room get 4x more tenant interest.</p>
+                </div>
                 <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-4 md:p-5 rounded-2xl font-bold shadow-xl hover:bg-indigo-700 transition">Submit Review</button>
             </div>
         </div>
@@ -172,7 +197,6 @@
             const lastName = document.getElementById('authLastName').value;
             const phone = document.getElementById('authPhone').value;
 
-            // MANDATORY FIELD VALIDATION FOR SIGNUP/LOGIN
             if (!email || !password) {
                 alert("Please enter both email and password.");
                 return;
@@ -207,11 +231,12 @@
             const houseNo = document.getElementById('houseNo').value;
             const floorNo = document.getElementById('floorNo').value;
             const street = document.getElementById('street').value;
+            const tenantType = document.getElementById('tenantType').value;
             const images = document.getElementById('multiImages').files;
 
-            // MANDATORY FIELD VALIDATION FOR PROPERTY
-            if(!title || !rent || !phone || !pincode || !houseNo || !floorNo || !street) {
-                alert("Please fill in all property details before submitting.");
+            // MANDATORY FIELD VALIDATION
+            if(!title || !rent || !phone || !pincode || !houseNo || !floorNo || !street || !tenantType) {
+                alert("Please fill in all details, including preferred tenant type.");
                 return;
             }
             if(images.length === 0) {
@@ -232,6 +257,7 @@
             formData.append('street', street);
             formData.append('rent', rent);
             formData.append('phone', phone);
+            formData.append('tenantType', tenantType);
             formData.append('furnishing', document.getElementById('furnishing').value);
             formData.append('parking', document.getElementById('parking').checked);
             formData.append('water', document.getElementById('water').checked);
@@ -244,26 +270,6 @@
             if(res.ok) { alert("Listing sent for verification!"); location.reload(); } 
             else { alert(data.error); }
         }
-
-        async function toggleWishlist(propId) {
-            const email = localStorage.getItem('userEmail');
-            if(!email) { toggleModal('authModal'); return; }
-            const res = await fetch('/api/wishlist/toggle', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, propId }) });
-            if(res.ok) { loadData(); }
-        }
-
-        async function reportBroker(propId) {
-            if(confirm("Report this broker?")) {
-                await fetch('/api/report-broker', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ propId }) });
-                alert("Reported.");
-            }
-        }
-
-        function openGallery(imagesJson) { currentPropImages = JSON.parse(decodeURIComponent(imagesJson)); currentImgIdx = 0; updateGalleryUI(); document.getElementById('galleryOverlay').classList.remove('hidden'); }
-        function closeGallery() { document.getElementById('galleryOverlay').classList.add('hidden'); }
-        function updateGalleryUI() { document.getElementById('galleryImg').src = currentPropImages[currentImgIdx]; document.getElementById('galleryCounter').innerText = `Image ${currentImgIdx + 1} of ${currentPropImages.length}`; }
-        function nextImg() { currentImgIdx = (currentImgIdx + 1) % currentPropImages.length; updateGalleryUI(); }
-        function prevImg() { currentImgIdx = (currentImgIdx - 1 + currentPropImages.length) % currentPropImages.length; updateGalleryUI(); }
 
         async function loadData() {
             const userEmail = localStorage.getItem('userEmail');
@@ -303,16 +309,16 @@
                                 <i class="${isWishlisted ? 'fas' : 'far'} fa-heart text-${isWishlisted ? 'rose-500' : 'slate-400'}"></i>
                             </button>
                         </div>
-                        <h4 class="font-bold text-lg text-slate-800 truncate">${p.title}</h4>
-                        <div class="flex justify-between items-center mt-1 mb-3">
+                        <h4 class="font-bold text-lg text-slate-800 truncate px-1">${p.title}</h4>
+                        <div class="flex justify-between items-center mt-1 mb-3 px-1">
                             <p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p>
                             <p class="text-slate-400 text-xs font-semibold">${p.locality}</p>
                         </div>
-                        <div class="flex flex-wrap gap-1.5 mb-4 px-1">
-                             <span class="text-[9px] bg-slate-50 px-2 py-1 rounded-full border text-slate-500 font-bold uppercase">${p.furnishing}</span>
-                             ${p.parking ? '<span class="text-[9px] bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 text-emerald-600 font-bold">Parking</span>' : ''}
-                             ${p.water ? '<span class="text-[9px] bg-blue-50 px-2 py-1 rounded-full border border-blue-100 text-blue-600 font-bold">Water</span>' : ''}
-                             ${p.gatedSecurity ? '<span class="text-[9px] bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 font-bold">Gated</span>' : ''}
+                        <div class="flex flex-wrap gap-1.5 mb-4 px-1 text-[9px] font-bold">
+                             <span class="bg-slate-50 px-2 py-1 rounded-full border text-slate-500 uppercase">${p.furnishing}</span>
+                             <span class="bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 uppercase">For: ${p.tenantType || 'All'}</span>
+                             ${p.parking ? '<span class="bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 text-emerald-600">Parking</span>' : ''}
+                             ${p.gatedSecurity ? '<span class="bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600">Gated Society</span>' : ''}
                         </div>
                         <p class="text-[10px] text-slate-400 font-bold mb-4 px-1"><i class="fas fa-heart text-rose-400 mr-1 text-[9px]"></i> ${p.likesCount || 0} interested</p>
                         ${isUnlocked ? `
@@ -329,7 +335,14 @@
                 `);
             });
         }
-        
+
+        // Shared functionality for Modal switching and Gallery
+        function openGallery(imagesJson) { currentPropImages = JSON.parse(decodeURIComponent(imagesJson)); currentImgIdx = 0; updateGalleryUI(); document.getElementById('galleryOverlay').classList.remove('hidden'); }
+        function closeGallery() { document.getElementById('galleryOverlay').classList.add('hidden'); }
+        function updateGalleryUI() { document.getElementById('galleryImg').src = currentPropImages[currentImgIdx]; document.getElementById('galleryCounter').innerText = `Image ${currentImgIdx + 1} of ${currentPropImages.length}`; }
+        function nextImg() { currentImgIdx = (currentImgIdx + 1) % currentPropImages.length; updateGalleryUI(); }
+        function prevImg() { currentImgIdx = (currentImgIdx - 1 + currentPropImages.length) % currentPropImages.length; updateGalleryUI(); }
+
         function filterProperties() {
             const term = document.getElementById('mainPropertySearch').value.toLowerCase();
             document.querySelectorAll('#property-list > div').forEach(card => { 
