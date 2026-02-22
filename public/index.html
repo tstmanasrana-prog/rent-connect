@@ -13,6 +13,15 @@
         .hero-pattern { background-color: #4338ca; background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%); }
         #galleryOverlay img { max-height: 80vh; object-fit: contain; }
         .heart-btn { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        /* Highlight Animation */
+        @keyframes pulse-highlight {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 0 20px 10px rgba(79, 70, 229, 0.2); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+        .property-highlight { animation: pulse-highlight 2s ease-in-out; border: 2px solid #4f46e5 !important; }
+
         @media (max-width: 640px) {
             .nav-text { display: none; } 
             .hero-title { font-size: 2.25rem !important; line-height: 2.5rem !important; }
@@ -337,7 +346,7 @@
                 const imgsData = encodeURIComponent(JSON.stringify(p.images));
 
                 list.insertAdjacentHTML('beforeend', `
-                    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4 relative">
+                    <div id="prop-${p._id}" class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4 relative">
                         <div onclick="openGallery('${imgsData}')" class="relative cursor-pointer group mb-4">
                             <img src="${p.images[0]}" class="w-full h-48 md:h-56 object-cover rounded-2xl group-hover:opacity-95 transition shadow-inner">
                             <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black uppercase">${p.bhkType}</div>
@@ -375,8 +384,29 @@
                     </div>
                 `);
             });
+
+            // NEW: After properties load, check for redirect ID
+            scrollToPropertyFromURL();
         }
         
+        // NEW: FUNCTION TO CATCH ID FROM DASHBOARD AND SCROLL
+        function scrollToPropertyFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const propId = urlParams.get('id');
+            
+            if (propId) {
+                setTimeout(() => {
+                    const target = document.getElementById(`prop-${propId}`);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        target.classList.add('property-highlight');
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => target.classList.remove('property-highlight'), 3000);
+                    }
+                }, 500); // Small delay to ensure rendering is complete
+            }
+        }
+
         // REPORTING LOGIC
         function openReportModal(propId) {
             document.getElementById('reportPropId').value = propId;

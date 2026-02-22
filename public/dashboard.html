@@ -97,7 +97,7 @@
                 `).join('') : '<p class="text-slate-400 text-sm italic">No properties posted yet.</p>';
             } catch (e) { console.error("Props Error"); }
 
-            // 3. Saved Properties (With Remove Button)
+            // 3. Saved Properties
             try {
                 const wRes = await fetch(`/api/my-wishlist/${userEmail}`);
                 const wishes = await wRes.json();
@@ -108,7 +108,7 @@
                         <div class="relative mb-4">
                             <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl shadow-inner">
                             <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black uppercase">${p.bhkType}</div>
-                            <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold">Vacant: ${p.vacantDate}</div>
+                            <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
                             
                             <button onclick="removeFromWishlist('${p._id}')" class="heart-btn absolute bottom-3 right-3 z-10 w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-125 text-white">
                                 <i class="fas fa-trash-alt text-sm"></i>
@@ -128,7 +128,7 @@
                              ${p.gatedSecurity ? '<span class="bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 uppercase">Gated Security</span>' : ''}
                         </div>
                         
-                        <a href="index.html" class="block w-full text-center bg-slate-900 text-white py-3 rounded-xl font-bold text-xs hover:bg-indigo-600 transition">View on Home</a>
+                        <a href="index.html?id=${p._id}" class="block w-full text-center bg-slate-900 text-white py-3 rounded-xl font-bold text-xs hover:bg-indigo-600 transition">View on Home</a>
                     </div>
                 `).join('') : '<p class="text-slate-400 text-sm italic">Your wishlist is empty.</p>';
             } catch (e) { console.error("Wishlist Error"); }
