@@ -7,35 +7,58 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-5px); }
+    </style>
 </head>
 <body class="bg-slate-50">
-    <nav class="bg-white border-b px-6 py-4 sticky top-0 z-50">
+    <nav class="bg-white border-b px-4 md:px-6 py-4 sticky top-0 z-50 shadow-sm">
         <div class="container mx-auto flex justify-between items-center">
-            <a href="index.html" class="text-xl font-extrabold text-slate-900"><i class="fas fa-arrow-left mr-2 text-indigo-600"></i> Back to Home</a>
-            <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2">
-                <i class="fas fa-coins text-amber-500"></i><span id="userCoins" class="font-bold text-amber-700">0</span>
+            <a href="index.html" class="text-sm md:text-base font-extrabold text-slate-900 flex items-center">
+                <i class="fas fa-arrow-left mr-2 text-indigo-600"></i> Back to Home
+            </a>
+            <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+                <i class="fas fa-coins text-amber-500"></i>
+                <span id="userCoins" class="font-bold text-amber-700">0</span>
             </div>
         </div>
     </nav>
 
-    <main class="container mx-auto px-6 py-12 max-w-6xl">
-        <h2 class="text-3xl font-black text-slate-900 mb-10">Welcome, <span id="userName">User</span>!</h2>
+    <main class="container mx-auto px-4 md:px-6 py-8 md:py-12 max-w-6xl">
+        <header class="mb-10">
+            <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-2">Welcome, <span id="userName" class="text-indigo-600">User</span>!</h2>
+            <p class="text-slate-500 font-medium">Manage your properties, wishlist, and coin activity here.</p>
+        </header>
 
         <div class="space-y-12">
             <div>
-                <h3 class="text-xl font-bold mb-6 text-rose-500"><i class="fas fa-heart mr-2"></i> Saved Properties</h3>
-                <div id="wish-list" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <h3 class="text-xl font-bold mb-6 text-rose-500 flex items-center">
+                    <i class="fas fa-heart mr-2"></i> Saved Properties
+                </h3>
+                <div id="wish-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <div>
-                    <h3 class="text-xl font-bold mb-6">My Posted Properties</h3>
-                    <div id="my-list" class="space-y-4"></div>
+                    <h3 class="text-xl font-bold mb-6 text-slate-800 flex items-center">
+                        <i class="fas fa-home mr-2 text-indigo-600"></i> My Posted Properties
+                    </h3>
+                    <div id="my-list" class="space-y-4">
+                        </div>
                 </div>
+
                 <div>
-                    <h3 class="text-xl font-bold mb-6">Activity Log</h3>
-                    <div id="tx-list" class="bg-white p-6 rounded-3xl border space-y-4 shadow-sm"></div>
+                    <h3 class="text-xl font-bold mb-6 text-slate-800 flex items-center">
+                        <i class="fas fa-history mr-2 text-amber-500"></i> Activity Log
+                    </h3>
+                    <div id="tx-list-container" class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                        <div id="tx-list" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            <p class="text-slate-400 italic text-sm">Loading history...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,45 +66,95 @@
 
     <script>
         const email = localStorage.getItem('userEmail');
+        const name = localStorage.getItem('userName');
+        
         if(!email) window.location.href = 'index.html';
+        document.getElementById('userName').innerText = name || 'User';
 
         async function loadDashboard() {
-            const syncRes = await fetch(`/api/user-sync/${email}`);
-            const syncData = await syncRes.json();
-            document.getElementById('userCoins').innerText = syncData.coins;
-            document.getElementById('userName').innerText = localStorage.getItem('userName');
+            try {
+                // 1. SYNC COINS
+                const syncRes = await fetch(`/api/user-sync/${email}`);
+                const syncData = await syncRes.json();
+                if(syncRes.ok) {
+                    document.getElementById('userCoins').innerText = syncData.coins;
+                }
 
-            const pRes = await fetch(`/api/my-properties/${email}`);
-            const props = await pRes.json();
-            document.getElementById('my-list').innerHTML = props.map(p => `
-                <div class="bg-white p-4 rounded-2xl border flex gap-4 items-center">
-                    <img src="${p.images[0]}" class="w-16 h-16 rounded-xl object-cover">
-                    <div>
-                        <p class="font-bold text-sm text-slate-800">${p.title}</p>
-                        <p class="text-[10px] uppercase font-black text-indigo-500">${p.status}</p>
-                    </div>
-                </div>
-            `).join('');
+                // 2. LOAD MY PROPERTIES
+                const pRes = await fetch(`/api/my-properties/${email}`);
+                const props = await pRes.json();
+                const myList = document.getElementById('my-list');
+                if(props.length > 0) {
+                    myList.innerHTML = props.map(p => `
+                        <div class="bg-white p-4 rounded-2xl border border-slate-100 flex gap-4 items-center hover:shadow-md transition">
+                            <img src="${p.images[0] || 'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-xl object-cover shadow-sm">
+                            <div>
+                                <p class="font-bold text-sm text-slate-800">${p.title}</p>
+                                <p class="text-[10px] uppercase font-black px-2 py-0.5 rounded-full inline-block mt-1 ${p.status === 'verified' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}">
+                                    ${p.status || 'Pending'}
+                                </p>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    myList.innerHTML = '<p class="text-slate-400 italic text-sm">You haven\'t posted any properties yet.</p>';
+                }
 
-            const wRes = await fetch(`/api/my-wishlist/${email}`);
-            const wishes = await wRes.json();
-            document.getElementById('wish-list').innerHTML = wishes.length ? wishes.map(p => `
-                <div class="bg-white p-4 rounded-3xl border shadow-sm">
-                    <img src="${p.images[0]}" class="w-full h-32 object-cover rounded-2xl mb-4">
-                    <p class="font-bold text-slate-800 truncate">${p.title}</p>
-                    <p class="text-indigo-600 font-bold">₹${p.rent}</p>
-                </div>
-            `).join('') : '<p class="text-slate-400 italic text-sm">No saved properties yet.</p>';
+                // 3. LOAD WISHLIST
+                const wRes = await fetch(`/api/my-wishlist/${email}`);
+                const wishes = await wRes.json();
+                const wishList = document.getElementById('wish-list');
+                if(wishes.length > 0) {
+                    wishList.innerHTML = wishes.map(p => `
+                        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition">
+                            <img src="${p.images[0] || 'https://via.placeholder.com/200'}" class="w-full h-32 object-cover rounded-2xl mb-4 shadow-inner">
+                            <p class="font-bold text-slate-800 truncate px-1">${p.title}</p>
+                            <p class="text-indigo-600 font-bold px-1">₹${p.rent}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    wishList.innerHTML = '<p class="text-slate-400 italic text-sm">No saved properties yet.</p>';
+                }
 
-            const tRes = await fetch(`/api/transactions/${email}`);
-            const txs = await tRes.json();
-            document.getElementById('tx-list').innerHTML = txs.map(t => `
-                <div class="flex justify-between items-center text-xs">
-                    <p class="text-slate-500">${new Date(t.date).toLocaleDateString()} - ${t.description}</p>
-                    <p class="font-bold ${t.type==='spent'?'text-rose-500':'text-green-500'}">${t.type==='spent'?'-':'+'}${t.amount}</p>
-                </div>
-            `).join('');
+                // 4. LOAD ACTIVITY LOG (FIXED LOGIC)
+                const tRes = await fetch(`/api/transactions/${email}`);
+                const txs = await tRes.json();
+                const txList = document.getElementById('tx-list');
+                
+                if(txs && txs.length > 0) {
+                    txList.innerHTML = txs.reverse().map(t => {
+                        // Check for both 'spent' and 'unlocked' as debit types
+                        const isDebit = t.type === 'spent' || t.amount < 0;
+                        const displayAmount = Math.abs(t.amount);
+                        const dateStr = t.date ? new Date(t.date).toLocaleDateString('en-IN', {day:'numeric', month:'short'}) : 'Recently';
+
+                        return `
+                            <div class="flex justify-between items-center border-b border-slate-50 pb-3 last:border-0">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${isDebit ? 'bg-rose-50 text-rose-500' : 'bg-green-50 text-green-500'}">
+                                        <i class="fas ${isDebit ? 'fa-arrow-up' : 'fa-arrow-down'} text-[10px]"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800">${t.description || 'Coin Update'}</p>
+                                        <p class="text-[10px] text-slate-400">${dateStr}</p>
+                                    </div>
+                                </div>
+                                <p class="font-bold text-xs ${isDebit ? 'text-rose-500' : 'text-green-600'}">
+                                    ${isDebit ? '-' : '+'}${displayAmount}
+                                </p>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    txList.innerHTML = '<div class="text-center py-6"><i class="fas fa-receipt text-slate-200 text-3xl mb-2"></i><p class="text-slate-400 italic text-sm">No coin activity found.</p></div>';
+                }
+
+            } catch (error) {
+                console.error("Dashboard Load Error:", error);
+                document.getElementById('tx-list').innerHTML = '<p class="text-rose-500 text-xs">Error loading history. Please try again.</p>';
+            }
         }
+
         window.onload = loadDashboard;
     </script>
 </body>
