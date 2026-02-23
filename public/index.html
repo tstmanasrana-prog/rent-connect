@@ -26,9 +26,12 @@
         }
         .property-highlight { animation: pulse-highlight 2s ease-in-out; border: 2px solid #4f46e5 !important; }
 
-        @media (max-width: 640px) {
+        /* FIXED MOBILE OVERLAP CSS */
+        @media (max-width: 640px) { 
             .nav-text { display: none; } 
             .hero-title { font-size: 2.25rem !important; line-height: 2.5rem !important; }
+            .user-name-text { display: none; } /* Hide user name on mobile to save space */
+            .coin-box { padding-left: 0.5rem !important; padding-right: 0.25rem !important; }
         }
     </style>
 </head>
@@ -37,21 +40,18 @@
     <div id="drawerOverlay" onclick="toggleDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[1000] hidden transition-opacity opacity-0"></div>
     <div id="sideDrawer" class="fixed top-0 right-0 h-full w-72 bg-white z-[1001] shadow-2xl p-8 flex flex-col">
         <div class="flex justify-between items-center mb-10">
-            <h2 class="text-xl font-black text-indigo-600">RentConnect</h2>
+            <h2 class="text-xl font-black text-indigo-600">Menu</h2>
             <button onclick="toggleDrawer()" class="text-slate-400 text-2xl hover:text-rose-500 transition">&times;</button>
         </div>
         <div class="space-y-6">
             <a href="about.html" class="flex items-center gap-4 text-slate-700 font-bold text-lg hover:text-indigo-600 transition">
-                <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fas fa-info-circle"></i></div>
-                About Us
+                <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fas fa-info-circle"></i></div>About Us
             </a>
             <a href="contact.html" class="flex items-center gap-4 text-slate-700 font-bold text-lg hover:text-indigo-600 transition">
-                <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fas fa-envelope"></i></div>
-                Contact Us
+                <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fas fa-envelope"></i></div>Contact Us
             </a>
             <a href="careers.html" class="flex items-center gap-4 text-slate-700 font-bold text-lg hover:text-indigo-600 transition">
-                <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fas fa-briefcase"></i></div>
-                Careers
+                <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-indigo-600"><i class="fas fa-briefcase"></i></div>Careers
             </a>
             <hr class="border-slate-100 my-6">
             <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 text-left">Social Connect</p>
@@ -61,43 +61,41 @@
                 <a href="#" class="text-slate-400 hover:text-indigo-600 transition text-xl"><i class="fab fa-linkedin"></i></a>
             </div>
         </div>
-        <div class="mt-auto">
-            <p class="text-[10px] font-bold text-slate-300">A Soul Shift Media Initiative</p>
-        </div>
+        <div class="mt-auto"><p class="text-[10px] font-bold text-slate-300">A Soul Shift Media Initiative</p></div>
     </div>
 
-    <nav class="glass-nav sticky top-0 z-50 px-4 md:px-6 py-4">
+    <nav class="glass-nav sticky top-0 z-50 px-3 md:px-6 py-4">
         <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2 md:gap-3">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg"><i class="fas fa-home text-sm"></i></div>
-                <h1 class="text-lg md:text-xl font-extrabold tracking-tight whitespace-nowrap">Rent<span class="text-indigo-600">Connect</span></h1>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0"><i class="fas fa-home text-xs"></i></div>
+                <h1 class="text-base md:text-xl font-extrabold tracking-tight whitespace-nowrap">Rent<span class="text-indigo-600">Connect</span></h1>
             </div>
 
-            <div class="flex items-center gap-2 md:gap-4 relative">
-                <div id="coinDisplay" class="hidden items-center bg-amber-50 border border-amber-200 pl-3 pr-1 py-1 rounded-full gap-2 transition shadow-sm">
-                    <i class="fas fa-coins text-amber-500 text-xs md:text-sm"></i>
+            <div class="flex items-center gap-1.5 md:gap-4 relative">
+                <div id="coinDisplay" class="hidden items-center bg-amber-50 border border-amber-200 pl-2 pr-1 py-1 rounded-full gap-1.5 transition shadow-sm coin-box">
+                    <i class="fas fa-coins text-amber-500 text-[10px] md:text-sm"></i>
                     <span id="userCoins" class="font-bold text-amber-700 text-xs md:text-sm">0</span>
                     <button onclick="toggleModal('buyCoinsModal')" class="w-6 h-6 md:w-8 md:h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 transition">
-                        <i class="fas fa-plus text-[10px]"></i>
+                        <i class="fas fa-plus text-[8px] md:text-[10px]"></i>
                     </button>
                 </div>
                 
-                <button onclick="handlePostPropertyClick()" class="bg-indigo-600 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg text-xs md:text-sm whitespace-nowrap hover:bg-indigo-700 transition">
-                    <i class="fas fa-plus mr-1 md:mr-2"></i><span class="nav-text">Post Property</span>
+                <button onclick="handlePostPropertyClick()" class="bg-indigo-600 text-white p-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg text-xs md:text-sm hover:bg-indigo-700 transition flex-shrink-0">
+                    <i class="fas fa-plus md:mr-1"></i><span class="nav-text">Post Property</span>
                 </button>
 
-                <div class="relative flex items-center gap-2 md:gap-3">
-                    <button id="loginBtn" onclick="handleAuthClick()" class="bg-slate-900 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg text-xs md:text-sm whitespace-nowrap">
-                        <i class="fas fa-user-circle mr-1 md:mr-2"></i><span id="loginBtnText">Sign In</span>
+                <div class="flex items-center gap-1.5 md:gap-3">
+                    <button id="loginBtn" onclick="handleAuthClick()" class="bg-slate-900 text-white p-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg text-xs md:text-sm whitespace-nowrap flex items-center gap-2">
+                        <i class="fas fa-user-circle"></i><span id="loginBtnText" class="user-name-text">Sign In</span>
                     </button>
 
-                    <button onclick="toggleDrawer()" class="w-10 h-10 flex flex-col items-center justify-center gap-1 bg-slate-100 rounded-xl hover:bg-slate-200 transition">
-                        <span class="w-5 h-0.5 bg-slate-900 rounded-full"></span>
-                        <span class="w-5 h-0.5 bg-slate-900 rounded-full"></span>
-                        <span class="w-5 h-0.5 bg-slate-900 rounded-full"></span>
+                    <button onclick="toggleDrawer()" class="w-9 h-9 md:w-10 md:h-10 flex flex-col items-center justify-center gap-1 bg-slate-100 rounded-xl hover:bg-slate-200 transition flex-shrink-0">
+                        <span class="w-4 md:w-5 h-0.5 bg-slate-900 rounded-full"></span>
+                        <span class="w-4 md:w-5 h-0.5 bg-slate-900 rounded-full"></span>
+                        <span class="w-4 md:w-5 h-0.5 bg-slate-900 rounded-full"></span>
                     </button>
 
-                    <div id="userMenu" class="hidden absolute right-12 mt-40 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-[300]">
+                    <div id="userMenu" class="hidden absolute right-0 top-full mt-3 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-[300]">
                         <a href="dashboard.html" class="block px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"><i class="fas fa-th-large mr-2 text-indigo-600"></i> Dashboard</a>
                         <button onclick="logout()" class="w-full text-left px-4 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50"><i class="fas fa-sign-out-alt mr-2"></i> Logout</button>
                     </div>
@@ -110,28 +108,17 @@
         <div class="bg-white p-6 md:p-8 rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
             <button onclick="toggleModal('buyCoinsModal')" class="absolute top-6 right-6 text-slate-400 text-2xl hover:text-rose-500 transition">&times;</button>
             <h3 class="text-2xl font-black text-slate-900 mb-2">Recharge Wallet</h3>
-            <p class="text-slate-500 text-sm mb-6">Get coins to unlock direct owner contacts.</p>
             <div class="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-6 mb-6">
                 <p class="text-[10px] font-black uppercase text-indigo-600 tracking-widest mb-1">Starter Pack</p>
                 <h4 class="text-4xl font-black text-indigo-900 mb-1">3 <span class="text-lg">Coins</span></h4>
-                <p class="text-xl font-bold text-indigo-600">₹149 <span class="text-xs text-slate-400 line-through">₹299</span></p>
+                <p class="text-xl font-bold text-indigo-600">₹149</p>
             </div>
-            <div class="space-y-3 text-left">
-                <p class="text-[10px] font-black uppercase text-slate-400 ml-1">Fast Checkout</p>
+            <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="window.open('upi://pay?pa=soulshift@upi&pn=SoulShiftMedia&am=149&cu=INR')" class="bg-white border-2 border-slate-100 p-3 rounded-2xl flex items-center justify-center gap-2 hover:border-indigo-600 transition">
-                        <img src="https://img.icons8.com/color/48/phone-pe.png" class="w-5 h-5"> <span class="text-xs font-bold text-slate-700">PhonePe</span>
-                    </button>
-                    <button onclick="window.open('upi://pay?pa=soulshift@upi&pn=SoulShiftMedia&am=149&cu=INR')" class="bg-white border-2 border-slate-100 p-3 rounded-2xl flex items-center justify-center gap-2 hover:border-indigo-600 transition">
-                        <img src="https://img.icons8.com/color/48/google-pay.png" class="w-5 h-5"> <span class="text-xs font-bold text-slate-700">G-Pay</span>
-                    </button>
+                    <button onclick="window.open('upi://pay?pa=soulshift@upi&pn=SoulShiftMedia&am=149&cu=INR')" class="bg-white border-2 border-slate-100 p-3 rounded-2xl flex items-center justify-center gap-2 hover:border-indigo-600 transition"><img src="https://img.icons8.com/color/48/phone-pe.png" class="w-5 h-5"><span class="text-xs font-bold text-slate-700">PhonePe</span></button>
+                    <button onclick="window.open('upi://pay?pa=soulshift@upi&pn=SoulShiftMedia&am=149&cu=INR')" class="bg-white border-2 border-slate-100 p-3 rounded-2xl flex items-center justify-center gap-2 hover:border-indigo-600 transition"><img src="https://img.icons8.com/color/48/google-pay.png" class="w-5 h-5"><span class="text-xs font-bold text-slate-700">G-Pay</span></button>
                 </div>
-                <div class="bg-slate-50 p-4 rounded-3xl border border-dashed border-slate-300 text-center">
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3 text-center">Scan UPI QR</p>
-                    <div class="w-32 h-32 bg-white mx-auto rounded-xl flex items-center justify-center border shadow-sm mb-2"><i class="fas fa-qrcode text-4xl text-slate-200"></i></div>
-                    <p class="text-[10px] font-bold text-slate-500 text-center">VPA: soulshift@upi</p>
-                </div>
-                <button onclick="window.open('https://wa.me/917008216132?text=I%20just%20paid%20149%20for%203%20coins')" class="w-full bg-green-600 text-white p-4 rounded-2xl font-bold shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 mt-4"><i class="fab fa-whatsapp"></i> I've Paid (Send Screenshot)</button>
+                <button onclick="window.open('https://wa.me/917008216132?text=I%20just%20paid%20149')" class="w-full bg-green-600 text-white p-4 rounded-2xl font-bold shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 mt-4"><i class="fab fa-whatsapp"></i> I've Paid (Send Proof)</button>
             </div>
         </div>
     </div>
@@ -139,59 +126,31 @@
     <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[400] p-2 md:p-4 backdrop-blur-md">
         <div class="bg-white p-5 md:p-8 rounded-[2rem] w-full max-w-3xl max-h-[95vh] overflow-y-auto relative shadow-2xl">
             <button onclick="toggleModal('postModal')" class="absolute top-4 right-4 text-slate-400 text-2xl transition hover:text-rose-500">&times;</button>
-            <h3 class="text-2xl md:text-3xl font-black mb-2 text-slate-900">List Property</h3>
+            <h3 class="text-2xl md:text-3xl font-black mb-2 text-slate-900 text-left">List Property</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6">
                 <div class="md:col-span-2">
-                    <input type="text" id="title" placeholder="Title (e.g., Luxury 2BHK Near Station)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize">
+                    <input type="text" id="title" placeholder="Listing Title (min 10 chars)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize">
                 </div>
-                
-                <div class="md:col-span-2">
-                    <select id="bhkType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none">
-                        <option value="1 RK">1 RK</option><option value="1 BHK">1 BHK</option><option value="2 BHK">2 BHK</option><option value="3 BHK">3 BHK</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
-                </div>
-                
+                <div class="md:col-span-2"><select id="bhkType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none"><option value="1 RK">1 RK</option><option value="1 BHK">1 BHK</option><option value="2 BHK">2 BHK</option><option value="3 BHK">3 BHK</option></select></div>
+                <div><input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
                 <div>
                     <select id="locality" onchange="handleLocalityChange(this.value)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
                         <option value="">Select Locality</option>
                     </select>
                 </div>
-
                 <div id="manualLocalityBox" class="md:col-span-2 hidden">
-                    <input type="text" id="manualLocalityInput" placeholder="Enter Exact Colony / Area Name" class="w-full bg-indigo-50 p-3 md:p-4 rounded-xl outline-none border border-indigo-200 focus:border-indigo-500 transition capitalize">
+                    <input type="text" id="manualLocalityInput" placeholder="Enter Exact Colony Name (min 3 chars)" class="w-full bg-indigo-50 p-3 md:p-4 rounded-xl outline-none border border-indigo-200 focus:border-indigo-500 transition capitalize">
                 </div>
-
                 <div><input type="text" id="district" placeholder="District" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
                 <div><input type="text" id="state" placeholder="State" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
-                
-                <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 uppercase"></div>
-                
-                <div><input type="text" id="floorNo" placeholder="Floor No" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 capitalize"></div>
-                
-                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark Name" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 capitalize"></div>
-                
-                <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500"></div>
-                <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500"></div>
-                
-                <div class="md:col-span-2">
-                    <select id="tenantType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none">
-                        <option value="">Preferred Tenant</option>
-                        <option value="Family">Family Only</option>
-                        <option value="Bachelor">Bachelor Only</option>
-                        <option value="Anyone">Family / Bachelor</option>
-                    </select>
-                </div>
-                
+                <div><input type="text" id="houseNo" placeholder="Flat No / Wing (min 1 char)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition uppercase"></div>
+                <div><input type="text" id="floorNo" placeholder="Floor (e.g. Ground, 1st)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
+                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark Name (min 5 chars)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
+                <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
+                <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
+                <div class="md:col-span-2"><select id="tenantType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none"><option value="Family">Family Only</option><option value="Bachelor">Bachelor Only</option><option value="Anyone">Anyone</option></select></div>
                 <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
-                    <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none">
-                        <option value="Unfurnished">Unfurnished</option>
-                        <option value="Semi-Furnished">Semi-Furnished</option>
-                        <option value="Fully Furnished">Fully Furnished</option>
-                    </select>
+                    <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none"><option value="Unfurnished">Unfurnished</option><option value="Semi-Furnished">Semi-Furnished</option><option value="Fully Furnished">Fully Furnished</option></select>
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="flex items-center gap-2"><input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-slate-700">Parking</label></div>
                         <div class="flex items-center gap-2"><input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-slate-700">Water</label></div>
@@ -211,8 +170,7 @@
         <div class="bg-white p-6 md:p-8 rounded-[2rem] w-full max-w-sm relative shadow-2xl">
             <button onclick="toggleModal('reportModal')" class="absolute top-4 right-4 text-slate-400 text-xl hover:text-rose-500 transition">&times;</button>
             <h3 class="text-xl font-extrabold text-slate-900 mb-2">Report Property</h3>
-            <p class="text-slate-500 text-xs mb-6 font-medium">Help us keep RentConnect safe and direct.</p>
-            <div class="space-y-3">
+            <div class="space-y-3 mt-4">
                 <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" name="reportReason" value="Broker/Commercial Agent" class="w-4 h-4 accent-indigo-600"><span class="text-sm font-bold text-slate-700">Broker/Commercial Agent</span></label>
                 <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" name="reportReason" value="Misleading Media/Photos" class="w-4 h-4 accent-indigo-600"><span class="text-sm font-bold text-slate-700">Misleading Media/Photos</span></label>
                 <label class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-indigo-50 transition"><input type="checkbox" name="reportReason" value="Inaccurate Location" class="w-4 h-4 accent-indigo-600"><span class="text-sm font-bold text-slate-700">Inaccurate Location</span></label>
@@ -227,13 +185,10 @@
             <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl transition hover:text-rose-500">&times;</button>
             <h3 id="authTitle" class="text-2xl md:text-3xl font-black mb-6 text-slate-900">Join RentConnect</h3>
             <div class="space-y-4 text-left">
-                <div id="nameFields" class="grid grid-cols-2 gap-4">
-                    <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full border focus:border-indigo-500">
-                    <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full border focus:border-indigo-500">
-                </div>
-                <input type="email" id="authEmail" placeholder="Email" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500">
-                <input type="text" id="authPhone" placeholder="Mobile" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500">
-                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500">
+                <div id="nameFields" class="grid grid-cols-2 gap-4"><input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full border focus:border-indigo-500 transition capitalize"><input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full border focus:border-indigo-500 transition capitalize"></div>
+                <input type="email" id="authEmail" placeholder="Email" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
+                <input type="text" id="authPhone" placeholder="Mobile" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
+                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
                 <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-3 md:p-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">Continue</button>
                 <p class="text-center text-xs md:text-sm mt-4"><button onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline transition">Switch Login / Signup</button></p>
             </div>
@@ -243,14 +198,14 @@
     <section class="hero-pattern text-white py-16 md:py-24 px-6 text-center">
         <h2 class="hero-title text-3xl md:text-6xl font-extrabold mb-6 leading-tight">Find your next home <br/><span class="text-indigo-300">without brokerage.</span></h2>
         <div class="bg-white rounded-2xl p-1.5 md:p-2 shadow-2xl flex flex-col md:flex-row gap-2 max-w-3xl mx-auto">
-            <input type="text" id="mainPropertySearch" autocomplete="off" oninput="filterProperties()" placeholder="Search Locality..." class="flex-1 px-4 py-3 md:px-6 md:py-4 text-slate-800 rounded-xl outline-none text-base md:text-lg">
+            <input type="text" id="mainPropertySearch" autocomplete="off" oninput="filterProperties()" placeholder="Search Locality..." class="flex-1 px-4 py-3 md:px-6 md:py-4 text-slate-800 rounded-xl outline-none text-base md:text-lg capitalize">
             <button onclick="filterProperties()" class="bg-indigo-600 text-white px-6 py-3 md:px-10 md:py-4 rounded-xl font-bold transition">Search</button>
         </div>
     </section>
 
-    <main class="container mx-auto px-4 md:px-6 py-8 md:py-12">
-        <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-6 md:mb-8 text-left">Verified Properties</h3>
-        <div id="property-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"></div>
+    <main class="container mx-auto px-4 md:px-6 py-12">
+        <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-8 text-left">Verified Properties</h3>
+        <div id="property-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
     </main>
 
     <footer class="py-12 text-center border-t border-slate-200 mt-20"><p class="text-slate-400 text-xs font-medium">© 2026 - Rent Connect</p></footer>
@@ -325,11 +280,11 @@
         }
 
         async function handleAuth() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const firstName = document.getElementById('authFirstName').value;
-            const lastName = document.getElementById('authLastName').value;
-            const phone = document.getElementById('authPhone').value;
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+            const firstName = document.getElementById('authFirstName').value.trim();
+            const lastName = document.getElementById('authLastName').value.trim();
+            const phone = document.getElementById('authPhone').value.trim();
             if (!email || !password) { alert("Enter email and password."); return; }
             if (isSignUp && (!firstName || !lastName || !phone)) { alert("Enter signup details."); return; }
             const body = { firstName, lastName, email, password, phone };
@@ -343,7 +298,6 @@
         }
 
         async function submitProperty() {
-            // SOFT GUARDRAIL 1: GRAB VALUES
             const title = document.getElementById('title').value.trim();
             const rent = document.getElementById('rent').value;
             const phone = document.getElementById('phone').value.trim();
@@ -353,18 +307,15 @@
             const images = document.getElementById('multiImages').files;
             let localityValue = document.getElementById('locality').value;
 
-            // SOFT GUARDRAIL 2: CHECK MANUAL LOCALITY
             if(localityValue === "OTHER_MANUAL") {
                 localityValue = document.getElementById('manualLocalityInput').value.trim();
                 if(localityValue.length < 3) { alert("Please enter a valid Locality name (min 3 letters)."); return; }
             }
-
-            // SOFT GUARDRAIL 3: EACH AND EVERY BOX CONSTRAINTS
-            if(!title || title.length < 5) { alert("Listing Title is too short. Please be more descriptive."); return; }
-            if(!localityValue) { alert("Please select or type a Locality."); return; }
-            if(!houseNo) { alert("Please enter Flat/House No."); return; }
-            if(!floorNo) { alert("Please enter Floor No."); return; }
-            if(!street || street.length < 3) { alert("Please enter a valid Street or Landmark (min 3 letters)."); return; }
+            if(!title || title.length < 10) { alert("Listing Title is too short. Please use at least 10 characters."); return; }
+            if(!localityValue) { alert("Please select a Locality."); return; }
+            if(!houseNo) { alert("Please enter House/Flat number."); return; }
+            if(!floorNo) { alert("Please enter Floor (e.g. Ground, 1st)."); return; }
+            if(!street || street.length < 5) { alert("Please enter a descriptive Street or Landmark name."); return; }
             if(!rent || rent < 500) { alert("Please enter a valid Monthly Rent."); return; }
             if(!phone || phone.length < 10) { alert("Please enter a valid 10-digit Phone Number."); return; }
             if(images.length === 0) { alert("Please select at least one property image."); return; }
@@ -393,92 +344,72 @@
             if(res.ok) { alert("Listing sent for verification!"); location.reload(); } else { const d = await res.json(); alert(d.error); }
         }
 
-        async function toggleWishlist(propId) {
-            const email = localStorage.getItem('userEmail');
-            if(!email) { toggleModal('authModal'); return; }
-            const res = await fetch('/api/wishlist/toggle', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, propId }) });
-            if(res.ok) { loadData(); }
-        }
-
         async function loadData() {
             const userEmail = localStorage.getItem('userEmail');
             if(userEmail) {
                 const syncRes = await fetch(`/api/user-sync/${userEmail}`);
                 const syncData = await syncRes.json();
                 if(syncRes.ok) {
-                    localStorage.setItem('userCoins', syncData.coins); localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
-                    localStorage.setItem('wishlist', JSON.stringify(syncData.wishlist)); document.getElementById('coinDisplay').classList.remove('hidden');
-                    document.getElementById('coinDisplay').classList.add('flex'); document.getElementById('userCoins').innerText = syncData.coins;
+                    localStorage.setItem('userCoins', syncData.coins);
+                    document.getElementById('coinDisplay').classList.remove('hidden');
+                    document.getElementById('coinDisplay').classList.add('flex');
+                    document.getElementById('userCoins').innerText = syncData.coins;
                     document.getElementById('loginBtnText').innerText = localStorage.getItem('userName');
                 }
             }
+
             const res = await fetch('/api/properties');
             const props = await res.json();
             const list = document.getElementById('property-list');
-            const unlockedList = JSON.parse(localStorage.getItem('unlocked') || "[]");
-            const wishlist = JSON.parse(localStorage.getItem('wishlist') || "[]");
-            list.innerHTML = '';
-            props.forEach(p => {
-                const isUnlocked = unlockedList.includes(p._id); const isWishlisted = wishlist.includes(p._id);
-                const imgsData = encodeURIComponent(JSON.stringify(p.images));
-                list.insertAdjacentHTML('beforeend', `
-                    <div id="prop-${p._id}" class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4 relative">
-                        <div onclick="openGallery('${imgsData}')" class="relative cursor-pointer group mb-4">
-                            <img src="${p.images[0]}" class="w-full h-48 md:h-56 object-cover rounded-2xl group-hover:opacity-95 transition shadow-inner">
-                            <div class="absolute top-3 left-3 bg-white/90 text-indigo-600 text-[10px] px-3 py-1 rounded-full font-black uppercase">${p.bhkType}</div>
-                            <div class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] px-3 py-1.5 rounded-full font-bold shadow-lg">Vacant: ${p.vacantDate}</div>
-                            <button onclick="event.stopPropagation(); toggleWishlist('${p._id}')" class="heart-btn absolute bottom-3 right-3 z-10 w-10 h-10 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg border border-slate-100 hover:scale-110 active:scale-125"><i class="${isWishlisted ? 'fas' : 'far'} fa-heart text-${isWishlisted ? 'rose-500' : 'slate-400'}"></i></button>
-                        </div>
-                        <h4 class="font-bold text-lg text-slate-800 truncate px-1">${p.title}</h4>
-                        <div class="flex justify-between items-center mt-1 mb-3 px-1"><p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p><p class="text-slate-400 text-xs font-semibold uppercase tracking-tighter">${p.locality}</p></div>
-                        <div class="flex flex-wrap gap-1.5 mb-4 px-1 text-[9px] font-bold"><span class="bg-slate-50 px-2 py-1 rounded-full border text-slate-500 uppercase">${p.furnishing}</span><span class="bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 uppercase">For: ${p.tenantType || 'All'}</span>${p.parking ? '<span class="bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 text-emerald-600 uppercase">Parking</span>' : ''}${p.gatedSecurity ? '<span class="bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 uppercase">Gated Security</span>' : ''}</div>
-                        <p class="text-[10px] text-slate-400 font-bold mb-4 px-1"><i class="fas fa-heart text-rose-400 mr-1 text-[9px]"></i> ${p.likesCount || 0} interested</p>
-                        ${isUnlocked ? `<div class="space-y-2"><button onclick="window.open('https://wa.me/${p.phone}')" class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 hover:bg-green-700"><i class="fab fa-whatsapp"></i> ${p.phone}</button><button onclick="openReportModal('${p._id}')" class="w-full text-slate-400 text-[10px] font-bold py-1 hover:text-rose-500 transition">Report</button></div>` : `<button onclick="unlockContact(event, '${p.phone}', '${p._id}')" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold shadow-lg transition hover:bg-indigo-600">Unlock Contact (1 Coin)</button>`}
+            
+            list.innerHTML = props.map(p => {
+                let tenantLabel = p.tenantType;
+                if(tenantLabel === "Anyone") tenantLabel = "Both";
+                
+                return `
+                <div id="prop-${p._id}" class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4 relative">
+                    <img src="${p.images[0]}" class="w-full h-48 object-cover rounded-2xl mb-4">
+                    <h4 class="font-bold text-lg text-slate-800 truncate px-1">${p.title}</h4>
+                    <div class="flex justify-between items-center mt-1 mb-3 px-1">
+                        <p class="text-indigo-600 font-extrabold text-xl">₹${p.rent}</p>
+                        <p class="text-slate-400 text-xs font-semibold uppercase tracking-tighter">${p.locality}</p>
                     </div>
-                `);
-            });
+                    <div class="flex flex-wrap gap-1.5 mb-4 px-1 text-[9px] font-bold">
+                         <span class="bg-slate-50 px-2 py-1 rounded-full border text-slate-500 uppercase">${p.furnishing}</span>
+                         <span class="bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 uppercase">${tenantLabel}</span>
+                         ${p.parking ? '<span class="bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 text-emerald-600 uppercase">Parking</span>' : ''}
+                         ${p.gatedSecurity ? '<span class="bg-indigo-50 px-2 py-1 rounded-full border border-indigo-100 text-indigo-600 uppercase">Gated Security</span>' : ''}
+                    </div>
+                    <button onclick="unlockContact(event, '${p.phone}', '${p._id}')" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold shadow-lg transition hover:bg-indigo-600">Unlock Contact</button>
+                </div>`;
+            }).join('');
+            
             scrollToPropertyFromURL();
         }
-        
+
         function scrollToPropertyFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const propId = urlParams.get('id');
             if (propId) {
                 setTimeout(() => {
                     const target = document.getElementById(`prop-${propId}`);
-                    if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.classList.add('property-highlight'); setTimeout(() => target.classList.remove('property-highlight'), 3000); }
+                    if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.classList.add('property-highlight'); }
                 }, 500);
             }
         }
 
-        function openReportModal(propId) {
-            document.getElementById('reportPropId').value = propId; document.getElementById('otherReportText').value = '';
-            document.querySelectorAll('input[name="reportReason"]').forEach(cb => cb.checked = false); toggleModal('reportModal');
-        }
-
-        async function submitReport() {
-            const propId = document.getElementById('reportPropId').value; const reasons = Array.from(document.querySelectorAll('input[name="reportReason"]:checked')).map(cb => cb.value);
-            const other = document.getElementById('otherReportText').value; if (reasons.length === 0 && !other) { alert("Select a reason."); return; }
-            const res = await fetch('/api/report-broker', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ propId, reasons, other }) });
-            if(res.ok) { alert("Report submitted."); toggleModal('reportModal'); }
-        }
-
-        function openGallery(imagesJson) { currentPropImages = JSON.parse(decodeURIComponent(imagesJson)); currentImgIdx = 0; updateGalleryUI(); document.getElementById('galleryOverlay').classList.remove('hidden'); }
-        function closeGallery() { document.getElementById('galleryOverlay').classList.add('hidden'); }
-        function updateGalleryUI() { document.getElementById('galleryImg').src = currentPropImages[currentImgIdx]; document.getElementById('galleryCounter').innerText = `Image ${currentImgIdx + 1} of ${currentPropImages.length}`; }
-        function nextImg() { currentImgIdx = (currentImgIdx + 1) % currentPropImages.length; updateGalleryUI(); }
-        function prevImg() { currentImgIdx = (currentImgIdx - 1 + currentPropImages.length) % currentPropImages.length; updateGalleryUI(); }
-
         function filterProperties() {
             const term = document.getElementById('mainPropertySearch').value.toLowerCase();
-            document.querySelectorAll('#property-list > div').forEach(card => { card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; });
+            document.querySelectorAll('#property-list > div').forEach(card => { 
+                card.style.display = card.innerText.toLowerCase().includes(term) ? "block" : "none"; 
+            });
         }
 
         async function unlockContact(e, phone, propId) {
-            const email = localStorage.getItem('userEmail'); if(!email) { toggleModal('authModal'); return; }
-            if(parseInt(localStorage.getItem('userCoins')) < 1) { alert("Need 1 coin."); return; }
+            const email = localStorage.getItem('userEmail');
+            if(!email) { toggleModal('authModal'); return; }
             if(confirm("Unlock contact for 1 Coin?")) {
-                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: 1, description: "Contact Unlock", propId }) });
+                const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: 1, propId }) });
                 if(res.ok) location.reload();
             }
         }
