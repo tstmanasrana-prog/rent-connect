@@ -141,21 +141,42 @@
             <button onclick="toggleModal('postModal')" class="absolute top-4 right-4 text-slate-400 text-2xl transition hover:text-rose-500">&times;</button>
             <h3 class="text-2xl md:text-3xl font-black mb-2 text-slate-900">List Property</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6">
-                <div class="md:col-span-2"><input type="text" id="title" placeholder="Title" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
-                <div class="md:col-span-2"><select id="bhkType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none"><option value="1 RK">1 RK</option><option value="1 BHK">1 BHK</option><option value="2 BHK">2 BHK</option><option value="3 BHK">3 BHK</option></select></div>
-                <div><input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
+                <div class="md:col-span-2">
+                    <input type="text" id="title" placeholder="Title (e.g., Luxury 2BHK Near Station)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <select id="bhkType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none">
+                        <option value="1 RK">1 RK</option><option value="1 BHK">1 BHK</option><option value="2 BHK">2 BHK</option><option value="3 BHK">3 BHK</option>
+                    </select>
+                </div>
+                
                 <div>
-                    <select id="locality" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
+                    <input type="number" id="pincode" onkeyup="autoFillLocation(this.value)" placeholder="Pincode" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
+                </div>
+                
+                <div>
+                    <select id="locality" onchange="handleLocalityChange(this.value)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition">
                         <option value="">Select Locality</option>
                     </select>
                 </div>
+
+                <div id="manualLocalityBox" class="md:col-span-2 hidden">
+                    <input type="text" id="manualLocalityInput" placeholder="Enter Exact Colony / Area Name" class="w-full bg-indigo-50 p-3 md:p-4 rounded-xl outline-none border border-indigo-200 focus:border-indigo-500 transition capitalize">
+                </div>
+
                 <div><input type="text" id="district" placeholder="District" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
                 <div><input type="text" id="state" placeholder="State" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
-                <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
-                <div><input type="text" id="floorNo" placeholder="Floor" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
-                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street/Landmark" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
-                <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
-                <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none"></div>
+                
+                <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 uppercase"></div>
+                
+                <div><input type="text" id="floorNo" placeholder="Floor No" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 capitalize"></div>
+                
+                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark Name" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 capitalize"></div>
+                
+                <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500"></div>
+                <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500"></div>
+                
                 <div class="md:col-span-2">
                     <select id="tenantType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none">
                         <option value="">Preferred Tenant</option>
@@ -164,8 +185,13 @@
                         <option value="Anyone">Family / Bachelor</option>
                     </select>
                 </div>
+                
                 <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
-                    <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none"><option value="Unfurnished">Unfurnished</option><option value="Semi-Furnished">Semi-Furnished</option><option value="Fully Furnished">Fully Furnished</option></select>
+                    <select id="furnishing" class="w-full bg-slate-50 p-3 rounded-xl outline-none">
+                        <option value="Unfurnished">Unfurnished</option>
+                        <option value="Semi-Furnished">Semi-Furnished</option>
+                        <option value="Fully Furnished">Fully Furnished</option>
+                    </select>
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="flex items-center gap-2"><input type="checkbox" id="parking" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-slate-700">Parking</label></div>
                         <div class="flex items-center gap-2"><input type="checkbox" id="water" class="w-5 h-5 accent-indigo-600"><label class="text-sm font-bold text-slate-700">Water</label></div>
@@ -279,15 +305,23 @@
                         localitySelect.innerHTML = '<option value="">Select Locality</option>';
                         postOffices.forEach(po => {
                             const opt = document.createElement('option');
-                            opt.value = po.Name;
-                            opt.innerText = po.Name;
+                            opt.value = po.Name; opt.innerText = po.Name;
                             localitySelect.appendChild(opt);
                         });
+                        const otherOpt = document.createElement('option');
+                        otherOpt.value = "OTHER_MANUAL"; otherOpt.innerText = "--- Other (Type Manually) ---";
+                        localitySelect.appendChild(otherOpt);
                         document.getElementById('district').value = postOffices[0].District;
                         document.getElementById('state').value = postOffices[0].State;
-                    } else { localitySelect.innerHTML = '<option value="">Invalid Pincode</option>'; }
+                    }
                 } catch (e) { console.error("API Error"); }
             }
+        }
+
+        function handleLocalityChange(val) {
+            const box = document.getElementById('manualLocalityBox');
+            if(val === "OTHER_MANUAL") box.classList.remove('hidden');
+            else box.classList.add('hidden');
         }
 
         async function handleAuth() {
@@ -302,33 +336,50 @@
             const res = await fetch(isSignUp ? '/api/signup' : '/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
             const data = await res.json();
             if(res.ok) {
-                localStorage.setItem('userName', data.firstName);
-                localStorage.setItem('userEmail', data.email);
-                localStorage.setItem('userCoins', data.coins);
-                localStorage.setItem('unlocked', JSON.stringify(data.unlocked || []));
-                localStorage.setItem('wishlist', JSON.stringify(data.wishlist || []));
-                location.reload();
+                localStorage.setItem('userName', data.firstName); localStorage.setItem('userEmail', data.email);
+                localStorage.setItem('userCoins', data.coins); localStorage.setItem('unlocked', JSON.stringify(data.unlocked || []));
+                localStorage.setItem('wishlist', JSON.stringify(data.wishlist || [])); location.reload();
             } else { alert(data.error); }
         }
 
         async function submitProperty() {
-            const title = document.getElementById('title').value;
+            // SOFT GUARDRAIL 1: GRAB VALUES
+            const title = document.getElementById('title').value.trim();
             const rent = document.getElementById('rent').value;
-            const phone = document.getElementById('phone').value;
-            const locality = document.getElementById('locality').value;
+            const phone = document.getElementById('phone').value.trim();
+            const houseNo = document.getElementById('houseNo').value.trim();
+            const floorNo = document.getElementById('floorNo').value.trim();
+            const street = document.getElementById('street').value.trim();
             const images = document.getElementById('multiImages').files;
-            if(!title || !rent || !phone || !locality || images.length === 0) { alert("Fill all details and select images."); return; }
+            let localityValue = document.getElementById('locality').value;
+
+            // SOFT GUARDRAIL 2: CHECK MANUAL LOCALITY
+            if(localityValue === "OTHER_MANUAL") {
+                localityValue = document.getElementById('manualLocalityInput').value.trim();
+                if(localityValue.length < 3) { alert("Please enter a valid Locality name (min 3 letters)."); return; }
+            }
+
+            // SOFT GUARDRAIL 3: EACH AND EVERY BOX CONSTRAINTS
+            if(!title || title.length < 5) { alert("Listing Title is too short. Please be more descriptive."); return; }
+            if(!localityValue) { alert("Please select or type a Locality."); return; }
+            if(!houseNo) { alert("Please enter Flat/House No."); return; }
+            if(!floorNo) { alert("Please enter Floor No."); return; }
+            if(!street || street.length < 3) { alert("Please enter a valid Street or Landmark (min 3 letters)."); return; }
+            if(!rent || rent < 500) { alert("Please enter a valid Monthly Rent."); return; }
+            if(!phone || phone.length < 10) { alert("Please enter a valid 10-digit Phone Number."); return; }
+            if(images.length === 0) { alert("Please select at least one property image."); return; }
+
             const formData = new FormData();
             formData.append('ownerEmail', localStorage.getItem('userEmail'));
             formData.append('title', title);
             formData.append('bhkType', document.getElementById('bhkType').value);
-            formData.append('locality', locality);
+            formData.append('locality', localityValue);
             formData.append('district', document.getElementById('district').value);
             formData.append('state', document.getElementById('state').value);
             formData.append('pincode', document.getElementById('pincode').value);
-            formData.append('houseNo', document.getElementById('houseNo').value);
-            formData.append('floorNo', document.getElementById('floorNo').value);
-            formData.append('street', document.getElementById('street').value);
+            formData.append('houseNo', houseNo);
+            formData.append('floorNo', floorNo);
+            formData.append('street', street);
             formData.append('rent', rent);
             formData.append('phone', phone);
             formData.append('tenantType', document.getElementById('tenantType').value);
@@ -337,6 +388,7 @@
             formData.append('water', document.getElementById('water').checked);
             formData.append('gatedSecurity', document.getElementById('gatedSecurity').checked);
             for(let i=0; i<images.length; i++) formData.append('images', images[i]);
+            
             const res = await fetch('/api/properties', { method: 'POST', body: formData });
             if(res.ok) { alert("Listing sent for verification!"); location.reload(); } else { const d = await res.json(); alert(d.error); }
         }
@@ -354,12 +406,9 @@
                 const syncRes = await fetch(`/api/user-sync/${userEmail}`);
                 const syncData = await syncRes.json();
                 if(syncRes.ok) {
-                    localStorage.setItem('userCoins', syncData.coins);
-                    localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
-                    localStorage.setItem('wishlist', JSON.stringify(syncData.wishlist));
-                    document.getElementById('coinDisplay').classList.remove('hidden');
-                    document.getElementById('coinDisplay').classList.add('flex');
-                    document.getElementById('userCoins').innerText = syncData.coins;
+                    localStorage.setItem('userCoins', syncData.coins); localStorage.setItem('unlocked', JSON.stringify(syncData.unlocked));
+                    localStorage.setItem('wishlist', JSON.stringify(syncData.wishlist)); document.getElementById('coinDisplay').classList.remove('hidden');
+                    document.getElementById('coinDisplay').classList.add('flex'); document.getElementById('userCoins').innerText = syncData.coins;
                     document.getElementById('loginBtnText').innerText = localStorage.getItem('userName');
                 }
             }
@@ -370,8 +419,7 @@
             const wishlist = JSON.parse(localStorage.getItem('wishlist') || "[]");
             list.innerHTML = '';
             props.forEach(p => {
-                const isUnlocked = unlockedList.includes(p._id);
-                const isWishlisted = wishlist.includes(p._id);
+                const isUnlocked = unlockedList.includes(p._id); const isWishlisted = wishlist.includes(p._id);
                 const imgsData = encodeURIComponent(JSON.stringify(p.images));
                 list.insertAdjacentHTML('beforeend', `
                     <div id="prop-${p._id}" class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4 relative">
@@ -391,7 +439,7 @@
             });
             scrollToPropertyFromURL();
         }
-
+        
         function scrollToPropertyFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const propId = urlParams.get('id');
@@ -404,17 +452,13 @@
         }
 
         function openReportModal(propId) {
-            document.getElementById('reportPropId').value = propId;
-            document.getElementById('otherReportText').value = '';
-            document.querySelectorAll('input[name="reportReason"]').forEach(cb => cb.checked = false);
-            toggleModal('reportModal');
+            document.getElementById('reportPropId').value = propId; document.getElementById('otherReportText').value = '';
+            document.querySelectorAll('input[name="reportReason"]').forEach(cb => cb.checked = false); toggleModal('reportModal');
         }
 
         async function submitReport() {
-            const propId = document.getElementById('reportPropId').value;
-            const reasons = Array.from(document.querySelectorAll('input[name="reportReason"]:checked')).map(cb => cb.value);
-            const other = document.getElementById('otherReportText').value;
-            if (reasons.length === 0 && !other) { alert("Select a reason."); return; }
+            const propId = document.getElementById('reportPropId').value; const reasons = Array.from(document.querySelectorAll('input[name="reportReason"]:checked')).map(cb => cb.value);
+            const other = document.getElementById('otherReportText').value; if (reasons.length === 0 && !other) { alert("Select a reason."); return; }
             const res = await fetch('/api/report-broker', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ propId, reasons, other }) });
             if(res.ok) { alert("Report submitted."); toggleModal('reportModal'); }
         }
@@ -431,8 +475,7 @@
         }
 
         async function unlockContact(e, phone, propId) {
-            const email = localStorage.getItem('userEmail');
-            if(!email) { toggleModal('authModal'); return; }
+            const email = localStorage.getItem('userEmail'); if(!email) { toggleModal('authModal'); return; }
             if(parseInt(localStorage.getItem('userCoins')) < 1) { alert("Need 1 coin."); return; }
             if(confirm("Unlock contact for 1 Coin?")) {
                 const res = await fetch('/api/spend-coin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, amount: 1, description: "Contact Unlock", propId }) });
