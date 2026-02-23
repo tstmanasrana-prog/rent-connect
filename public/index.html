@@ -38,9 +38,12 @@
             </div>
 
             <div class="flex items-center gap-2 md:gap-4 relative">
-                <div id="coinDisplay" class="hidden items-center bg-amber-50 border border-amber-200 px-3 py-1.5 md:px-4 md:py-2 rounded-full gap-2 transition">
+                <div id="coinDisplay" class="hidden items-center bg-amber-50 border border-amber-200 pl-3 pr-1 py-1 rounded-full gap-2 transition shadow-sm">
                     <i class="fas fa-coins text-amber-500 text-xs md:text-sm"></i>
                     <span id="userCoins" class="font-bold text-amber-700 text-xs md:text-sm">0</span>
+                    <button onclick="toggleModal('buyCoinsModal')" class="w-6 h-6 md:w-8 md:h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 transition">
+                        <i class="fas fa-plus text-[10px]"></i>
+                    </button>
                 </div>
                 
                 <button onclick="handlePostPropertyClick()" class="bg-indigo-600 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg text-xs md:text-sm whitespace-nowrap hover:bg-indigo-700">
@@ -59,6 +62,44 @@
             </div>
         </div>
     </nav>
+
+    <div id="buyCoinsModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[600] p-4 backdrop-blur-md">
+        <div class="bg-white p-6 md:p-8 rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
+            <button onclick="toggleModal('buyCoinsModal')" class="absolute top-6 right-6 text-slate-400 text-2xl hover:text-rose-500 transition">&times;</button>
+            <h3 class="text-2xl font-black text-slate-900 mb-2">Recharge Wallet</h3>
+            <p class="text-slate-500 text-sm mb-6">Get coins to unlock direct owner contacts.</p>
+
+            <div class="bg-indigo-50 border-2 border-indigo-200 rounded-3xl p-6 mb-6">
+                <p class="text-[10px] font-black uppercase text-indigo-600 tracking-widest mb-1">Starter Pack</p>
+                <h4 class="text-4xl font-black text-indigo-900 mb-1">3 <span class="text-lg">Coins</span></h4>
+                <p class="text-xl font-bold text-indigo-600">₹149 <span class="text-xs text-slate-400 line-through">₹299</span></p>
+            </div>
+
+            <div class="space-y-3 text-left">
+                <p class="text-[10px] font-black uppercase text-slate-400 ml-1">Fast Checkout</p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="window.open('upi://pay?pa=soulshift@upi&pn=SoulShiftMedia&am=149&cu=INR')" class="bg-white border-2 border-slate-100 p-3 rounded-2xl flex items-center justify-center gap-2 hover:border-indigo-600 transition">
+                        <img src="https://img.icons8.com/color/48/phone-pe.png" class="w-5 h-5"> <span class="text-xs font-bold text-slate-700">PhonePe</span>
+                    </button>
+                    <button onclick="window.open('upi://pay?pa=soulshift@upi&pn=SoulShiftMedia&am=149&cu=INR')" class="bg-white border-2 border-slate-100 p-3 rounded-2xl flex items-center justify-center gap-2 hover:border-indigo-600 transition">
+                        <img src="https://img.icons8.com/color/48/google-pay.png" class="w-5 h-5"> <span class="text-xs font-bold text-slate-700">G-Pay</span>
+                    </button>
+                </div>
+                
+                <div class="bg-slate-50 p-4 rounded-3xl border border-dashed border-slate-300 text-center">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3">Scan UPI QR</p>
+                    <div class="w-32 h-32 bg-white mx-auto rounded-xl flex items-center justify-center border shadow-sm mb-2">
+                        <i class="fas fa-qrcode text-4xl text-slate-200"></i>
+                    </div>
+                    <p class="text-[10px] font-bold text-slate-500 tracking-tight">VPA: soulshift@upi</p>
+                </div>
+
+                <button onclick="window.open('https://wa.me/917008216132?text=I%20just%20paid%20149%20for%203%20coins')" class="w-full bg-green-600 text-white p-4 rounded-2xl font-bold shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 mt-4">
+                    <i class="fab fa-whatsapp"></i> I've Paid (Send Screenshot)
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="reportModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[550] p-4 backdrop-blur-sm">
         <div class="bg-white p-6 md:p-8 rounded-[2rem] w-full max-w-sm relative shadow-2xl">
@@ -156,7 +197,6 @@
 
                 <div class="md:col-span-2">
                     <input type="file" id="multiImages" multiple class="w-full text-xs text-slate-500 mt-2">
-                    <p class="text-[10px] text-indigo-500 font-bold mt-1 ml-1">Tip: Properties with photos of every room get 4x more tenant interest.</p>
                 </div>
                 <button onclick="submitProperty()" class="md:col-span-2 bg-indigo-600 text-white p-4 md:p-5 rounded-2xl font-bold shadow-xl hover:bg-indigo-700 transition">Submit Review</button>
             </div>
@@ -267,19 +307,10 @@
             const title = document.getElementById('title').value;
             const rent = document.getElementById('rent').value;
             const phone = document.getElementById('phone').value;
-            const pincode = document.getElementById('pincode').value;
-            const houseNo = document.getElementById('houseNo').value;
-            const floorNo = document.getElementById('floorNo').value;
-            const street = document.getElementById('street').value;
-            const tenantType = document.getElementById('tenantType').value;
             const images = document.getElementById('multiImages').files;
 
-            if(!title || !rent || !phone || !pincode || !houseNo || !floorNo || !street || !tenantType) {
-                alert("Please fill in all details, including preferred tenant type.");
-                return;
-            }
-            if(images.length === 0) {
-                alert("Please select at least one image.");
+            if(!title || !rent || !phone || images.length === 0) {
+                alert("Please fill in all details and select at least one image.");
                 return;
             }
 
@@ -290,13 +321,13 @@
             formData.append('locality', document.getElementById('locality').value);
             formData.append('district', document.getElementById('district').value);
             formData.append('state', document.getElementById('state').value);
-            formData.append('pincode', pincode);
-            formData.append('houseNo', houseNo);
-            formData.append('floorNo', floorNo);
-            formData.append('street', street);
+            formData.append('pincode', document.getElementById('pincode').value);
+            formData.append('houseNo', document.getElementById('houseNo').value);
+            formData.append('floorNo', document.getElementById('floorNo').value);
+            formData.append('street', document.getElementById('street').value);
             formData.append('rent', rent);
             formData.append('phone', phone);
-            formData.append('tenantType', tenantType);
+            formData.append('tenantType', document.getElementById('tenantType').value);
             formData.append('furnishing', document.getElementById('furnishing').value);
             formData.append('parking', document.getElementById('parking').checked);
             formData.append('water', document.getElementById('water').checked);
@@ -385,11 +416,9 @@
                 `);
             });
 
-            // NEW: After properties load, check for redirect ID
             scrollToPropertyFromURL();
         }
         
-        // NEW: FUNCTION TO CATCH ID FROM DASHBOARD AND SCROLL
         function scrollToPropertyFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             const propId = urlParams.get('id');
@@ -400,14 +429,12 @@
                     if (target) {
                         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         target.classList.add('property-highlight');
-                        // Remove highlight after 3 seconds
                         setTimeout(() => target.classList.remove('property-highlight'), 3000);
                     }
-                }, 500); // Small delay to ensure rendering is complete
+                }, 500);
             }
         }
 
-        // REPORTING LOGIC
         function openReportModal(propId) {
             document.getElementById('reportPropId').value = propId;
             document.getElementById('otherReportText').value = '';
@@ -437,7 +464,6 @@
             }
         }
 
-        // Shared functionality for Modal switching and Gallery
         function openGallery(imagesJson) { currentPropImages = JSON.parse(decodeURIComponent(imagesJson)); currentImgIdx = 0; updateGalleryUI(); document.getElementById('galleryOverlay').classList.remove('hidden'); }
         function closeGallery() { document.getElementById('galleryOverlay').classList.add('hidden'); }
         function updateGalleryUI() { document.getElementById('galleryImg').src = currentPropImages[currentImgIdx]; document.getElementById('galleryCounter').innerText = `Image ${currentImgIdx + 1} of ${currentPropImages.length}`; }
