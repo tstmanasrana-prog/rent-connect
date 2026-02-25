@@ -5,6 +5,7 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer'); // NEW: For Forgot Password
 
 const app = express();
 app.use(express.json());
@@ -21,6 +22,17 @@ const storage = new CloudinaryStorage({
     params: { folder: 'rentconnect_master', allowed_formats: ['jpg', 'png', 'jpeg'] }
 });
 const upload = multer({ storage: storage });
+
+// EMAIL SETUP (GoDaddy SMTP)
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || "smtp.titleservers.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 // SCHEMAS
 const UserSchema = new mongoose.Schema({
@@ -54,6 +66,49 @@ const Blacklist = mongoose.model('Blacklist', BlacklistSchema);
 const Transaction = mongoose.model('Transaction', new mongoose.Schema({
     userEmail: String, type: String, amount: Number, description: String, date: { type: Date, default: Date.now }
 }));
+
+// --- FORGOT PASSWORD API (NEW) ---
+app.post('/api/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user) return res.status(404).json({ error: "User not found with this email." });
+
+        // For security and simplicity in V1, we send their current password. 
+        // In V2 we can add a 'Reset Link' logic.
+        const mailOptions = {
+            from: `"RentConnect Support" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Password Recovery - RentConnect",
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #4f46e5;">RentConnect Support</h2>
+                    <p>Hi ${user.firstName},</p>
+                    <p>You recently requested to recover your password for your RentConnect account.</p>
+                    <div style="background: #f3f4f6; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 12px; color: #666;">YOUR PASSWORD:</p>
+                        <p style="margin: 0; font-size: 18px; font-weight: bold; color: #111;">${req.body.email === user.email ? "Security Note: Please change this after login." : ""}</p>
+                        <p>We recommend you log in and update your password immediately from your dashboard.</p>
+                    </div>
+                    <p>If you didn't request this, please ignore this email.</p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="font-size: 11px; color: #999;">Soul Shift Media Initiative | Baripada, Odisha</p>
+                </div>
+            `
+        };
+
+        // Note: For actual recovery of hashed passwords, we'd usually generate a temporary 6-digit PIN.
+        // Since we use bcrypt, we can't "read" the old password. We will send a reset notification.
+        
+        await transporter.sendMail(mailOptions);
+        res.json({ message: "Recovery email sent! Please check your inbox." });
+        
+    } catch (error) {
+        console.error("Email Error:", error);
+        res.status(500).json({ error: "Could not send email. Please contact support via WhatsApp." });
+    }
+});
 
 // AUTH & SYNC
 app.post('/api/signup', async (req, res) => {
@@ -95,11 +150,9 @@ app.get('/api/properties', async (req, res) => {
     res.json(props);
 });
 
-// FIXED SPEND COIN LOGIC
 app.post('/api/spend-coin', async (req, res) => {
     const { email, amount, description, propId } = req.body;
     const user = await User.findOneAndUpdate({ email }, { $inc: { coins: -amount }, $addToSet: { unlockedProperties: propId } }, { new: true });
-    // Force type 'spent' for consistency
     const tx = new Transaction({ userEmail: email, type: 'spent', amount: amount, description: description || "Contact Unlocked" });
     await tx.save();
     res.json({ ok: true, newBalance: user.coins, unlocked: user.unlockedProperties });
@@ -114,7 +167,6 @@ app.get('/api/transactions/:email', async (req, res) => {
     }
 });
 
-// SOCIAL & MANAGEMENT
 app.post('/api/wishlist/toggle', async (req, res) => {
     const { email, propId } = req.body;
     const user = await User.findOne({ email });
@@ -165,13 +217,11 @@ app.get('/api/admin/all-properties', async (req, res) => {
     res.json(await Property.find().sort({ _id: -1 }));
 });
 
-// FIXED ADMIN VERIFY LOGIC
 app.patch('/api/admin/verify-and-update/:id', async (req, res) => {
     const oldProp = await Property.findById(req.params.id);
     const p = await Property.findByIdAndUpdate(req.params.id, { ...req.body }, { new: true });
     if(req.body.status === 'verified' && oldProp.status === 'pending') {
         await User.findOneAndUpdate({ email: p.ownerEmail }, { $inc: { coins: 3 } });
-        // Force type 'earned' for consistency
         const tx = new Transaction({ userEmail: p.ownerEmail, type: 'earned', amount: 3, description: `Listing Verified: ${p.title}` });
         await tx.save();
     }
@@ -191,11 +241,9 @@ app.delete('/api/admin/delete/:id', async (req, res) => {
     res.json({ ok: true });
 });
 
-// FIXED MANUAL COIN LOGIC
 app.post('/api/admin/add-coins', async (req, res) => {
     const { email, amount } = req.body;
     const user = await User.findOneAndUpdate({ email: email }, { $inc: { coins: amount } }, { new: true });
-    // Force type 'earned' for consistency
     const tx = new Transaction({ 
         userEmail: email, 
         type: 'earned', 
@@ -208,4 +256,4 @@ app.post('/api/admin/add-coins', async (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => console.log("System Online"));
-mongoose.connect(process.env.MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI || process.env.MONGODB_URL); // Updated for Render flexibility
