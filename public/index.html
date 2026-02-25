@@ -54,6 +54,7 @@
                 <a href="#" class="text-slate-400 hover:text-indigo-600 transition text-xl"><i class="fab fa-facebook"></i></a>
             </div>
         </div>
+        <div class="mt-auto"><p class="text-[10px] font-bold text-slate-300">A Soul Shift Media Initiative</p></div>
     </div>
 
     <nav class="glass-nav sticky top-0 z-50 px-3 md:px-6 py-4">
@@ -100,9 +101,11 @@
 
                 <button onclick="handleAuth()" id="authSubmitBtn" class="w-full bg-indigo-600 text-white p-3 md:p-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">Continue</button>
                 
-                <p id="switchAuthText" class="text-center text-xs md:text-sm mt-4">
-                    <button onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline transition">Switch Login / Signup</button>
-                </p>
+                <div id="authFooter" class="text-center mt-4">
+                    <p id="switchAuthText" class="text-xs md:text-sm">
+                        <button onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline transition">Switch Login / Signup</button>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -120,8 +123,8 @@
                 <div><input type="text" id="district" placeholder="District" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
                 <div><input type="text" id="state" placeholder="State" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
                 <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition uppercase"></div>
-                <div><input type="text" id="floorNo" placeholder="Floor (e.g. Ground, 1st)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
-                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark Name" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
+                <div><input type="text" id="floorNo" placeholder="Floor" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
+                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
                 <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
                 <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
                 <div class="md:col-span-2"><select id="tenantType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none"><option value="Family">Family Only</option><option value="Bachelor">Bachelor Only</option><option value="Anyone">Anyone</option></select></div>
@@ -197,7 +200,7 @@
             else { toggleModal('postModal'); }
         }
 
-        // FORGOT PASSWORD TOGGLE
+        // FIXED FORGOT PASSWORD UI (CLEAN VERSION)
         function toggleForgotMode(active) {
             isForgotMode = active;
             document.getElementById('authTitle').innerText = active ? "Reset Password" : (isSignUp ? "Join RentConnect" : "Welcome Back");
@@ -205,15 +208,15 @@
             document.getElementById('authPhone').style.display = (active || !isSignUp) ? "none" : "block";
             document.getElementById('passwordContainer').style.display = active ? "none" : "block";
             document.getElementById('authSubmitBtn').innerText = active ? "Send Reset Email" : "Continue";
-            document.getElementById('switchAuthText').style.display = active ? "none" : "block";
+            
+            // Cleanly switch footer content to avoid duplicates
+            const footer = document.getElementById('authFooter');
             if(active) {
-                // Add a "Back to Login" link if in forgot mode
-                const backBtn = document.createElement('button');
-                backBtn.id = "backToLogin";
-                backBtn.innerText = "Back to Login";
-                backBtn.className = "text-indigo-600 font-bold text-xs mt-4 w-full text-center hover:underline";
-                backBtn.onclick = () => { document.getElementById('backToLogin').remove(); toggleForgotMode(false); };
-                document.getElementById('authForm').appendChild(backBtn);
+                footer.innerHTML = `<button onclick="toggleForgotMode(false)" class="text-indigo-600 font-bold text-xs hover:underline transition">Back to Login</button>`;
+            } else {
+                footer.innerHTML = `<p id="switchAuthText" class="text-xs md:text-sm">
+                    <button onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline transition">Switch Login / Signup</button>
+                </p>`;
             }
         }
 
@@ -232,7 +235,6 @@
                 if(res.ok) toggleModal('authModal');
                 return;
             }
-            // Normal Login/Signup logic continues...
             const password = document.getElementById('authPassword').value.trim();
             const firstName = document.getElementById('authFirstName').value.trim();
             const lastName = document.getElementById('authLastName').value.trim();
@@ -247,7 +249,7 @@
             } else { alert(data.error); }
         }
 
-        // (AutoFill, Locality Change, SubmitProperty, LoadData logic preserved exactly as previous master)
+        // [All other API logic preserved for Pincode, Listing, and Properties]
         async function autoFillLocation(pin) {
             const localitySelect = document.getElementById('locality');
             if(pin.length === 6) {
