@@ -22,7 +22,6 @@
         }
         .property-highlight { animation: pulse-highlight 2s ease-in-out; border: 2px solid #4f46e5 !important; }
         
-        /* MOBILE OPTIMIZATION FIX */
         @media (max-width: 640px) { 
             .nav-text { display: none; } 
             .hero-title { font-size: 2.25rem !important; line-height: 2.5rem !important; }
@@ -102,6 +101,24 @@
         </div>
     </div>
 
+    <div id="authModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[500] p-4 backdrop-blur-md">
+        <div class="bg-white p-6 md:p-10 rounded-[2.5rem] w-full max-w-md relative shadow-2xl text-center">
+            <button onclick="toggleModal('authModal')" class="absolute top-6 right-6 text-slate-300 text-2xl transition hover:text-rose-500">&times;</button>
+            <h3 id="authTitle" class="text-2xl md:text-3xl font-black mb-6 text-slate-900">Join RentConnect</h3>
+            <div class="space-y-4 text-left">
+                <div id="nameFields" class="grid grid-cols-2 gap-4">
+                    <input type="text" id="authFirstName" placeholder="First Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full border focus:border-indigo-500 transition capitalize">
+                    <input type="text" id="authLastName" placeholder="Last Name" class="bg-slate-50 p-3 md:p-4 rounded-xl outline-none w-full border focus:border-indigo-500 transition capitalize">
+                </div>
+                <input type="email" id="authEmail" placeholder="Email" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500">
+                <input type="text" id="authPhone" placeholder="Mobile" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500">
+                <input type="password" id="authPassword" placeholder="Password" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500">
+                <button onclick="handleAuth()" class="w-full bg-indigo-600 text-white p-3 md:p-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">Continue</button>
+                <p class="text-center text-xs md:text-sm mt-4"><button onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline transition">Switch Login / Signup</button></p>
+            </div>
+        </div>
+    </div>
+
     <div id="postModal" class="fixed inset-0 bg-slate-900/80 hidden flex justify-center items-center z-[400] p-2 md:p-4 backdrop-blur-md">
         <div class="bg-white p-5 md:p-8 rounded-[2rem] w-full max-w-3xl max-h-[95vh] overflow-y-auto relative shadow-2xl">
             <button onclick="toggleModal('postModal')" class="absolute top-4 right-4 text-slate-400 text-2xl transition hover:text-rose-500">&times;</button>
@@ -114,9 +131,9 @@
                 <div id="manualLocalityBox" class="md:col-span-2 hidden"><input type="text" id="manualLocalityInput" placeholder="Enter Exact Colony Name (min 3 chars)" class="w-full bg-indigo-50 p-3 md:p-4 rounded-xl outline-none border border-indigo-200 focus:border-indigo-500 transition capitalize"></div>
                 <div><input type="text" id="district" placeholder="District" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
                 <div><input type="text" id="state" placeholder="State" class="w-full bg-slate-100 p-3 md:p-4 rounded-xl outline-none" readonly></div>
-                <div><input type="text" id="houseNo" placeholder="Flat No / Wing (min 1 char)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition uppercase"></div>
+                <div><input type="text" id="houseNo" placeholder="Flat No / Wing" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition uppercase"></div>
                 <div><input type="text" id="floorNo" placeholder="Floor (e.g. Ground, 1st)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
-                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark Name (min 5 chars)" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
+                <div class="md:col-span-2"><input type="text" id="street" placeholder="Street / Landmark Name" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition capitalize"></div>
                 <div><input type="number" id="rent" placeholder="Monthly Rent" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
                 <div><input type="text" id="phone" placeholder="Landlord Phone" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl outline-none border focus:border-indigo-500 transition"></div>
                 <div class="md:col-span-2"><select id="tenantType" class="w-full bg-slate-50 p-3 md:p-4 rounded-xl border-none outline-none"><option value="Family">Family Only</option><option value="Bachelor">Bachelor Only</option><option value="Anyone">Anyone</option></select></div>
@@ -143,14 +160,22 @@
     </section>
 
     <main class="container mx-auto px-4 md:px-6 py-12">
-        <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-8">Verified Properties</h3>
+        <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-8 text-left">Verified Properties</h3>
         <div id="property-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
     </main>
+
+    <footer class="py-12 text-center border-t border-slate-200 mt-20"><p class="text-slate-400 text-xs font-medium">© 2026 - Rent Connect</p></footer>
 
     <script>
         let isSignUp = true;
         let currentPropImages = [];
         let currentImgIdx = 0;
+
+        // FIXED MODAL TOGGLE
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.classList.toggle('hidden');
+        }
 
         function toggleDrawer() {
             const drawer = document.getElementById('sideDrawer');
@@ -160,17 +185,30 @@
             setTimeout(() => overlay.classList.toggle('opacity-0'), 10);
         }
 
-        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
+        // RESTORED AUTH CLICKS
         function handleAuthClick() {
-            if(localStorage.getItem('userEmail')) { document.getElementById('userMenu').classList.toggle('hidden'); } 
-            else { toggleModal('authModal'); }
+            if(localStorage.getItem('userEmail')) { 
+                document.getElementById('userMenu').classList.toggle('hidden'); 
+            } else { 
+                toggleModal('authModal'); 
+            }
         }
 
         function handlePostPropertyClick() {
-            if(!localStorage.getItem('userEmail')) { toggleModal('authModal'); } 
-            else { toggleModal('postModal'); }
+            if(!localStorage.getItem('userEmail')) { 
+                toggleModal('authModal'); 
+            } else { 
+                toggleModal('postModal'); 
+            }
+        }
+
+        function toggleAuthMode() { 
+            isSignUp = !isSignUp; 
+            document.getElementById('authTitle').innerText = isSignUp ? "Join RentConnect" : "Welcome Back";
+            document.getElementById('nameFields').style.display = isSignUp ? "grid" : "none"; 
+            document.getElementById('authPhone').style.display = isSignUp ? "block" : "none";
         }
 
         async function autoFillLocation(pin) {
@@ -193,7 +231,7 @@
                         document.getElementById('district').value = postOffices[0].District;
                         document.getElementById('state').value = postOffices[0].State;
                     }
-                } catch (e) { console.error("Pincode API Error"); }
+                } catch (e) { console.error("API Error"); }
             }
         }
 
@@ -223,8 +261,6 @@
             const title = document.getElementById('title').value.trim();
             const rent = document.getElementById('rent').value;
             const phone = document.getElementById('phone').value.trim();
-            const houseNo = document.getElementById('houseNo').value.trim();
-            const street = document.getElementById('street').value.trim();
             const images = document.getElementById('multiImages').files;
             let localityValue = document.getElementById('locality').value;
 
@@ -233,7 +269,6 @@
                 if(localityValue.length < 3) { alert("Enter a valid Locality name."); return; }
             }
             if(!title || title.length < 10) { alert("Title is too short."); return; }
-            if(!street || street.length < 5) { alert("Street is too short."); return; }
             if(!phone || phone.length < 10) { alert("Enter a valid phone."); return; }
             if(images.length === 0) { alert("Add at least 1 image."); return; }
 
@@ -245,9 +280,9 @@
             formData.append('district', document.getElementById('district').value);
             formData.append('state', document.getElementById('state').value);
             formData.append('pincode', document.getElementById('pincode').value);
-            formData.append('houseNo', houseNo);
+            formData.append('houseNo', document.getElementById('houseNo').value);
             formData.append('floorNo', document.getElementById('floorNo').value);
-            formData.append('street', street);
+            formData.append('street', document.getElementById('street').value);
             formData.append('rent', rent);
             formData.append('phone', phone);
             formData.append('tenantType', document.getElementById('tenantType').value);
